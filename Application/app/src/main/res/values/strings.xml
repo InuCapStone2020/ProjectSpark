@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">projectSpark</string>
+    <string name="toolbar_main_name">메 뉴</string>
+    <string name="toolbar_repository_name">보 관 함</string>
+    <string name="toolbar_map_name">지 도</string>
+    <string name="toolbar_setting_name">설 정</string>
+    <string name="toolbar_search_name">검 색</string>
+</resources>
