@@ -16,7 +16,7 @@ main_url = "https://www.safekorea.go.kr/idsiSFK/neo/sfk/cs/sfc/dis/disasterMsgLi
 #불러오는 함수 넣을 자리
 
 #불러온 것 중 가장 최근 데이터의 고유번호
-number=85930
+number=85000
 
 #---------웹 크롤링 드라이버 옵션---------
 options = webdriver.ChromeOptions()
@@ -36,21 +36,37 @@ driver.get(main_url)
 
 #---------웹 크롤링 모듈---------
 number=str(number) #int->str
+flag=False
+cnt=0
+
 while(1):
     label2="bbsDtl('63','"+number+"');"
     print(label2)#test
+    driver.get(main_url)
     driver.execute_script(label2)
     
     temp1 = driver.find_element_by_id("bbs_next").text
     temp2 = driver.find_element_by_id("bbs_gubun").text
     
-    if(temp1 == temp2):
-        print(temp1)
-        print(temp2)
-        driver.quit()
-        break
+    if(temp1 == temp2 and flag==False):
+        flag=True
+        time.sleep(1)
+        continue
+        
+    elif(temp1 == temp2 and flag==True):
+        cnt += 1
+        if (cnt >= 10):
+            driver.quit()
+            break
+        flag=False
+        number=str(int(number)+1)
+        time.sleep(1)
+        continue
     
-    
+    cnt=0
+    if (flag==True):
+        flag=False
+        
     date_all=(driver.find_element_by_id("sj")).text
     
     if(date_all==''):
@@ -69,7 +85,6 @@ while(1):
     print(text_text)
     print(text_place)
     
-    time.sleep(3)
-    driver.get(main_url)
+    time.sleep(1)
     number=str(int(number)+1)
     
