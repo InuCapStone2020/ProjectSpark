@@ -1,42 +1,60 @@
-import math 
 from selenium import webdriver
+import math 
 import time
-from tqdm import tqdm
 import re
+
+#--------------글로벌 변수--------------
+
+#chromedriver 파일 위치
+target="C:\\Users\\podoCU\\Exercises\\chromedriver.exe"
+
+#국민재난안전포털 재난문자 url
+main_url = "https://www.safekorea.go.kr/idsiSFK/neo/sfk/cs/sfc/dis/disasterMsgList.jsp?menuSeq=679"
+
+#----DB에서 가장 최근 컨텐츠 불러오기----
+
+#불러오는 함수 넣을 자리
+
+#불러온 것 중 가장 최근 데이터의 고유번호
+number=85930
+
+#---------웹 크롤링 드라이버 옵션---------
 options = webdriver.ChromeOptions()
+
+#백그라운드로 돌리기 위한 옵션
 options.add_argument('headless')
 options.add_argument("disable-gpu")
-driver = webdriver.Chrome(r"C:\Users\podoCU\Exercises\chromedriver.exe")
-#options=options
-number=0
-text=''
-flag=0
 
-while(flag!=-1):
-    if(flag > 10):
-        flag=0
-        time.sleep(3)
-        driver = webdriver.Chrome(r"C:\Users\podoCU\Exercises\chromedriver.exe")
-    main_url = "https://www.safekorea.go.kr/idsiSFK/neo/sfk/cs/sfc/dis/disasterMsgList.jsp?menuSeq=679"
-    driver.get(main_url)
-    title2=driver.find_elements_by_id("bbs_tr_0_bbs_title")
-    print(title2,end='')
-    if(title2==[]):
-        #time.sleep(5)
-        flag += 1
-        continue
-    flag=-1
-    text = title2[0].text
-    label = title2[0].get_attribute('href')
-    
-label=label.split(':')[1]
-number = re.findall("\d+", label)[1] #str
+#크롬 실행
+driver = webdriver.Chrome(target)
+
+#크롬 백그라운드로 실행
+#driver = webdriver.Chrome(target,options=options)
+
+#해당 홈페이지 실행
+driver.get(main_url)
+
+#---------웹 크롤링 모듈---------
+number=str(number) #int->str
 while(1):
     label2="bbsDtl('63','"+number+"');"
-    print(label2)
+    print(label2)#test
     driver.execute_script(label2)
+    
+    temp1 = driver.find_element_by_id("bbs_next").text
+    temp2 = driver.find_element_by_id("bbs_gubun").text
+    
+    if(temp1 == temp2):
+        print(temp1)
+        print(temp2)
+        driver.quit()
+        break
+    
+    
     date_all=(driver.find_element_by_id("sj")).text
-    text_all=(driver.find_element_by_id("cn")).text
+    
+    if(date_all==''):
+        date_all=(driver.find_element_by_id("sj")).text
     
     date_date=date_all.split(' ')[0]
     date_time=date_all.split(' ')[1]
@@ -44,12 +62,14 @@ while(1):
     print(date_time)
     print(date_date)
     
+    text_all=(driver.find_element_by_id("cn")).text
+    
     text_text=text_all.split("-송출지역-")[0]
     text_place=text_all.split("-송출지역-")[1]
     print(text_text)
     print(text_place)
     
-    time.sleep(5)
+    time.sleep(3)
     driver.get(main_url)
-    number=str(int(number)-1)
+    number=str(int(number)+1)
     
