@@ -11,12 +11,15 @@ target="C:\\Users\\podoCU\\Exercises\\chromedriver.exe"
 #국민재난안전포털 재난문자 url
 main_url = "https://www.safekorea.go.kr/idsiSFK/neo/sfk/cs/sfc/dis/disasterMsgList.jsp?menuSeq=679"
 
+#한 사이클 돌리는 대기 시간
+sleep_time = 1
+
 #----DB에서 가장 최근 컨텐츠 불러오기----
 
 #불러오는 함수 넣을 자리
 
 #불러온 것 중 가장 최근 데이터의 고유번호
-number=85000
+number=86188
 
 #---------웹 크롤링 드라이버 옵션---------
 options = webdriver.ChromeOptions()
@@ -40,6 +43,7 @@ flag=False
 cnt=0
 
 while(1):
+    number=str(int(number)+1)
     label2="bbsDtl('63','"+number+"');"
     print(label2)#test
     driver.get(main_url)
@@ -50,7 +54,8 @@ while(1):
     
     if(temp1 == temp2 and flag==False):
         flag=True
-        time.sleep(1)
+        time.sleep(sleep_time)
+        number=str(int(number)-1)
         continue
         
     elif(temp1 == temp2 and flag==True):
@@ -59,8 +64,7 @@ while(1):
             driver.quit()
             break
         flag=False
-        number=str(int(number)+1)
-        time.sleep(1)
+        time.sleep(sleep_time)
         continue
     
     cnt=0
@@ -82,9 +86,20 @@ while(1):
     
     text_text=text_all.split("-송출지역-")[0]
     text_place=text_all.split("-송출지역-")[1]
+    text_place_high=text_place.split(" ")[0]
+    text_place_low=text_place.split(" ")[1]
+    
+    
     print(text_text)
     print(text_place)
+    print(text_place_high)
+    print(text_place_low)
+    time.sleep(sleep_time)
     
-    time.sleep(1)
-    number=str(int(number)+1)
+    
+    #---------데이터 변환 모듈---------
+    message_data = {"번호":number,"날짜":date_date,"시간":date_time,"지역_상위":text_place_high,"지역_하위":
+                   text_place_low,"내용":text_text}
+    print(message_data)
+    
     
