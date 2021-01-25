@@ -2,6 +2,7 @@ from selenium import webdriver
 import math 
 import time
 import re
+import json
 #--------------글로벌 변수--------------
 
 #chromedriver 파일 위치
@@ -55,8 +56,8 @@ while(1):
     driver.execute_script(label2)
     
     #다음 페이지, 이전 페이지의 텍스트
-    temp1 = driver.find_element_by_id("bbs_next").text
-    temp2 = driver.find_element_by_id("bbs_gubun").text
+    temp1 = driver.find_elements_by_id("bbs_next")[0].text
+    temp2 = driver.find_elements_by_id("bbs_gubun")[0].text
     
     #텍스트가 같으면 둘다 "데이터가 없습니다"이므로 재시도, +1이 되므로 다시 -1
     if(temp1 == temp2 and flag==False):
@@ -106,7 +107,6 @@ while(1):
     time.sleep(sleep_time)
     
     #---------데이터 변환 모듈---------
-    import json
     
     for i in range(len(text_place)):
         #저장한 데이터를 JSON형식으로 변환
