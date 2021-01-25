@@ -9,6 +9,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.ProjectSpark">
+        <activity android:name=".searchActivity"></activity>
+        <activity android:name=".settingActivity" />
+        <activity android:name=".repositoryActivity" />
+        <activity android:name=".mapActivity" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
