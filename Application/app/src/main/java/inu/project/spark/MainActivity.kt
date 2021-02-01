@@ -46,19 +46,23 @@ class MainActivity : AppCompatActivity() {
         val button_main_search = findViewById<View>(R.id.button_main_search)
         // set goto each layout by button
         button_main_map.setOnClickListener{
-            var i = Intent(this, mapActivity::class.java)
+            var i = Intent(this, SubActivity::class.java)
+            i.putExtra("fragment",R.id.button_main_map)
             startActivity(i)
         }
         button_main_setting.setOnClickListener{
-            var i = Intent(this, settingActivity::class.java)
+            var i = Intent(this, SubActivity::class.java)
+            i.putExtra("fragment",R.id.button_main_setting)
             startActivity(i)
         }
         button_main_repository.setOnClickListener{
-            var i = Intent(this, repositoryActivity::class.java)
+            var i = Intent(this, SubActivity::class.java)
+            i.putExtra("fragment",R.id.button_main_repository)
             startActivity(i)
         }
         button_main_search.setOnClickListener{
-            var i = Intent(this, searchActivity::class.java)
+            var i = Intent(this, SubActivity::class.java)
+            i.putExtra("fragment",R.id.button_main_search)
             startActivity(i)
         }
 
