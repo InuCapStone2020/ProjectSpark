@@ -5,5 +5,5 @@ var connection = mysql.createConnection({
     user: "[masteruser id]",
     database: "[databse to access]",
     password: "[pw]",
-    port: 3306
+    port: 3306 //mysql port
 });
