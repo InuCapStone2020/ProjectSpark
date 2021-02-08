@@ -8,12 +8,9 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
+        android:name=".MyApplication"
         android:theme="@style/Theme.ProjectSpark">
         <activity android:name=".SubActivity"></activity>
-        <activity android:name=".searchActivity" />
-        <activity android:name=".settingActivity" />
-        <activity android:name=".repositoryActivity" />
-        <activity android:name=".mapActivity" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

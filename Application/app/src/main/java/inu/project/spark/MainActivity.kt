@@ -65,8 +65,5 @@ class MainActivity : AppCompatActivity() {
             i.putExtra("fragment",R.id.button_main_search)
             startActivity(i)
         }
-
-
-
     }
 }

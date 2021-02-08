@@ -5,4 +5,6 @@
     <string name="toolbar_map_name">지 도</string>
     <string name="toolbar_setting_name">설 정</string>
     <string name="toolbar_search_name">검 색</string>
+    <string name="toolbar_alarm_name">알 림  설 정</string>
+    <string name="toolbar_local_name">지 역  설 정</string>
 </resources>

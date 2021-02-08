@@ -6,8 +6,10 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.fragment.app.Fragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class SubActivity : AppCompatActivity(){
@@ -24,28 +26,31 @@ class SubActivity : AppCompatActivity(){
         val mBNavBar = findViewById<View>(R.id.Bottom_Navigation) as BottomNavigationView
         val menutext = findViewById<View>(R.id.toolbar_sub_title) as TextView
         mToolbar.setNavigationOnClickListener{
-            var i = Intent(this, MainActivity::class.java)
-            startActivity(i)
+            gotoMainActiverty()
         }
         val extras = intent.extras ?:return
         val fragment = extras.getInt("fragment")
         when (fragment){
             R.id.button_main_map->{
-                supportFragmentManager.beginTransaction().replace(R.id.frameLayout, fragmentMap).commit()
+                replaceFragment(fragmentMap)
+                //supportFragmentManager.beginTransaction().replace(R.id.frameLayout, fragmentMap).commit()
                 menutext.setText(R.string.toolbar_map_name)
                 mBNavBar.selectedItemId = R.id.mapItem
             }
             R.id.button_main_setting->{
-                supportFragmentManager.beginTransaction().replace(R.id.frameLayout, fragmentSetting).commit()
+                replaceFragment(fragmentSetting)
+                //supportFragmentManager.beginTransaction().replace(R.id.frameLayout, fragmentSetting).commit()
                 menutext.setText(R.string.toolbar_setting_name)
                 mBNavBar.selectedItemId = R.id.settingItem
             }
             R.id.button_main_repository->{
-                supportFragmentManager.beginTransaction().replace(R.id.frameLayout, fragmentRepository).commit()
+                replaceFragment(fragmentRepository)
+                //supportFragmentManager.beginTransaction().replace(R.id.frameLayout, fragmentRepository).commit()
                 menutext.setText(R.string.toolbar_repository_name)
             }
             R.id.button_main_search->{
-                supportFragmentManager.beginTransaction().replace(R.id.frameLayout, fragmentSearch).commit()
+                replaceFragment(fragmentSearch)
+                //supportFragmentManager.beginTransaction().replace(R.id.frameLayout, fragmentSearch).commit()
                 menutext.setText(R.string.toolbar_search_name)
                 mBNavBar.selectedItemId = R.id.searchItem
             }
@@ -58,21 +63,28 @@ class SubActivity : AppCompatActivity(){
                     startActivity(i)
                 }
                 R.id.mapItem -> {
-                    supportFragmentManager.beginTransaction().replace(R.id.frameLayout, fragmentMap).commit()
+                    replaceFragment(fragmentMap)
+                    //supportFragmentManager.beginTransaction().replace(R.id.frameLayout, fragmentMap).commit()
                     menutext.setText(R.string.toolbar_map_name)
                 }
                 R.id.searchItem -> {
-                    supportFragmentManager.beginTransaction().replace(R.id.frameLayout, fragmentSearch).commit()
+                    replaceFragment(fragmentSearch)
+                    //supportFragmentManager.beginTransaction().replace(R.id.frameLayout, fragmentSearch).commit()
                     menutext.setText(R.string.toolbar_search_name)
                 }
                 R.id.settingItem -> {
-                    if (!menutext.text.equals(R.string.toolbar_setting_name.toString())) {
-                        supportFragmentManager.beginTransaction().replace(R.id.frameLayout, fragmentSetting).commit()
-                        menutext.setText(R.string.toolbar_setting_name)
-                    }
+                    replaceFragment(fragmentSetting)
+                    menutext.setText(R.string.toolbar_setting_name)
                 }
             }
             return@setOnNavigationItemSelectedListener true
         }
+    }
+    fun replaceFragment(fragment: Fragment){
+        supportFragmentManager.beginTransaction().replace(R.id.frameLayout, fragment).commit()
+    }
+    fun gotoMainActiverty(){
+        var i = Intent(this, MainActivity::class.java)
+        startActivity(i)
     }
 }

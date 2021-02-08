@@ -1,14 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/setting_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".settingFragment">
 
-    <TextView
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/setting_layout_sub"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="setting" />
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/button_setting_alarm"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:src="@drawable/ic_iconmonstr_bell_7"
+            app:layout_constraintBottom_toTopOf="@+id/button_setting_local"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:contentDescription="TODO" />
+
+        <ImageView
+            android:id="@+id/button_setting_local"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_iconmonstr_map_6"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.501"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/button_setting_alarm" />
+
+        <TextView
+            android:id="@+id/textView_setting_alarm"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="알림 설정"
+            android:textColor="@color/black"
+            android:textSize="18sp"
+            app:layout_constraintEnd_toEndOf="@+id/button_setting_alarm"
+            app:layout_constraintStart_toStartOf="@+id/button_setting_alarm"
+            app:layout_constraintTop_toBottomOf="@+id/button_setting_alarm" />
+
+        <TextView
+            android:id="@+id/textView_setting_map"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="지역 설정"
+            android:textColor="@color/black"
+            android:textSize="18sp"
+            app:layout_constraintEnd_toEndOf="@+id/button_setting_local"
+            app:layout_constraintHorizontal_bias="0.476"
+            app:layout_constraintStart_toStartOf="@+id/button_setting_local"
+            app:layout_constraintTop_toBottomOf="@+id/button_setting_local" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </FrameLayout>
