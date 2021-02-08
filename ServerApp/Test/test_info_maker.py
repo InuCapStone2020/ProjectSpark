@@ -15,7 +15,7 @@ main_url = "https://www.safekorea.go.kr/idsiSFK/neo/sfk/cs/sfc/dis/disasterMsgLi
 sleep_time = 0.1
 
 #사이클 몇번 돌릴 것인가
-cycle=10
+cycle=1000
 
 #텍스트 저장
 text_list=''
@@ -24,7 +24,7 @@ text_list=''
 #불러오는 함수 넣을 자리
 
 #불러온 것 중 가장 최근 데이터의 고유번호
-number=85000
+number=86000
 #---------웹 크롤링 드라이버 옵션---------
 options = webdriver.ChromeOptions()
 
@@ -95,7 +95,7 @@ while(cycle_cnt < cycle):
     cycle_cnt += 1
     
 import sys
-file=open('output.txt','w',encoding='utf8')
+file=open('output_2.txt','w',encoding='utf8')
 file.write(text_list)
 file.close()
 
