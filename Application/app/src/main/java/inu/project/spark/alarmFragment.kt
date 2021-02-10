@@ -89,8 +89,7 @@ class alarmFragment : Fragment() {
                     }
                 }
             }
-            var checklist:List<String> = listOf(checkedweek, mstart.text.toString() ,mend.text.toString())
-
+            MyApplication.prefs.savealarm(checkedweek,mstart.text.toString(),mend.text.toString())
             exitaddalarm()
         }
 
