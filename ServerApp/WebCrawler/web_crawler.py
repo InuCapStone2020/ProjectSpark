@@ -1,8 +1,8 @@
 from selenium import webdriver
-import math 
 import time
 import re
 import json
+import pymysql
 #--------------글로벌 변수--------------
 
 #chromedriver 파일 위치
@@ -13,14 +13,29 @@ main_url = "https://www.safekorea.go.kr/idsiSFK/neo/sfk/cs/sfc/dis/disasterMsgLi
 
 #한 사이클 돌리는 대기 시간
 sleep_time = 1
-
 #----DB에서 가장 최근 데이터 불러오기----
 
-#불러오는 함수 넣을 자리
+# main_db = pymysql.connect(
+#     user='root'
+#     passwd='password'
+#     host='127.0.0.1'
+#     db='main_db'
+#     chatset='utf8'
+# )
+#user유저네임/passwd비밀번호/host호스트/db데이터베이스명/charset인코딩
+
+#검색결과를 딕셔너리 형태로 반환
+#cursor=main_db.cursor(pymysql.cursors.DictCursor)
+
+#검색할 명령어
+# sql = "SELECT * FROM '검색';"
+# cursor.execute(sql)
+# result=cursor.fetchall()
 
 #불러온 것 중 가장 최근 데이터의 고유번호
-number=86540
 
+#가장 최근 데이터 고유번호 가져오는 함수 넣을 자리
+number=91870
 #---------웹 크롤링 드라이버 옵션---------
 options = webdriver.ChromeOptions()
 
@@ -36,7 +51,6 @@ driver = webdriver.Chrome(target)
 
 #해당 홈페이지 실행
 driver.get(main_url)
-
 #---------웹 크롤링 모듈---------
 
 #DB의 가장 최근 데이터 번호
@@ -45,6 +59,8 @@ number=str(number)
 flag=False
 #없는 번호 및 프로그램 종료 시점을 알기 위한 카운트 변수
 cnt=0
+#데이터 저장하기 위한 변수
+data_message_all=[]
 
 while(1):
     #가장 최근 데이터 + 1
@@ -107,20 +123,18 @@ while(1):
     time.sleep(sleep_time)
     
     #---------데이터 변환 모듈---------
-    
     for i in range(len(text_place)):
         #저장한 데이터를 JSON형식으로 변환
-        message_data = {"번호":number,"서브_번호":i,"날짜":date_date,"시간":date_time,"지역":text_place[i],"내용":text_text}
-        
-        #저장할 JSON 파일 이름
-        file_name=number+'_'+str(i)+'.json'
-        print(file_name)
-        
-        #JSON파일로 저장 및 파일 생성
-        
-        #with open(file_name,"w",encoding="utf-8")as fp:
-        #    data_json=json.dumps(message_data,fp,ensure_ascii=False,indent="/t")
-        
-        #데이터를 JSON파일로 저장 및 보기 ensure-한글표시 indent-여러줄로 표시
-        data_json=json.dumps(message_data,ensure_ascii=False,indent="/t")
-        print(data_json)
+        data_message = {"num":int(number),"sub_num":i,"date":date_date,"time":date_time,"place":text_place[i],"text":text_text}
+        data_message_all.append(data_message)
+#---------JSON파일로 저장 및 파일 생성---------
+data_message = {"data":data_message_all}
+#저장할 JSON 파일 이름
+file_name=str(number)+'.json'
+
+with open(file_name,"w",encoding="utf-8")as fp:
+    data_json=json.dump(data_message,fp,ensure_ascii=False,indent='\t')
+
+#데이터를 JSON파일로 저장 및 보기 ensure-한글표시 indent-여러줄로 표시
+data_json=json.dumps(data_message,ensure_ascii=False,indent='\t')
+print(data_json)
