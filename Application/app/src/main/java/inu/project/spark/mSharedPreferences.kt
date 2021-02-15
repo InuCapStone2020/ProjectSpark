@@ -70,9 +70,10 @@ class mSharedPreferences (context: Context){
                 while(i < c){
                     val tempObject = arr.getJSONObject(i)
                     alarmlist.add(tempObject.toString())
+                    i++
                 }
             }
-            catch(e:JSONException){
+            catch(e:Exception){
                 e.printStackTrace()
             }
         }
@@ -98,5 +99,4 @@ class mSharedPreferences (context: Context){
             }
         }
     }
-
 }

@@ -14,6 +14,8 @@ import android.widget.*
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.FragmentManager
 import androidx.preference.PreferenceFragmentCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import java.util.*
 import kotlin.math.min
 
@@ -26,6 +28,7 @@ class alarmFragment : Fragment() {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.alarm_fragment, container, false)
     }
+
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         val fragmentSetting: settingFragment = settingFragment()
@@ -91,6 +94,18 @@ class alarmFragment : Fragment() {
             }
             MyApplication.prefs.savealarm(checkedweek,mstart.text.toString(),mend.text.toString())
             exitaddalarm()
+        }
+        var listItems:MutableList<String>? = MyApplication.prefs.getalarm()
+        val mrecycle = requireView().findViewById<View>(R.id.alarm_recycle) as RecyclerView
+        if (listItems == null) {
+            mrecycle.visibility = View.GONE
+        }
+        else {
+            val layoutManager = LinearLayoutManager(context)
+            mrecycle.layoutManager = layoutManager
+            mrecycle.setHasFixedSize(true)
+            val adpater = mAdapter(listItems)
+            mrecycle.adapter = adpater
         }
 
 
