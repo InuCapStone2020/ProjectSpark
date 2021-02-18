@@ -59,5 +59,6 @@ class mAdapter(list:MutableList<String>) : RecyclerView.Adapter<mAdapter.MyViewH
         MyApplication.prefs.deletealarm(position)
         jsonList.removeAt(position)
         notifyItemRemoved(position)
+        notifyItemRangeChanged(position,jsonList.size)
     }
 }

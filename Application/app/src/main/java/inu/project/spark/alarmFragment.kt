@@ -79,6 +79,19 @@ class alarmFragment : Fragment() {
         }
 
         val msave = requireView().findViewById<View>(R.id.add_save_button) as Button
+
+        var listItems:MutableList<String>? = MyApplication.prefs.getalarm()
+        val mrecycle = requireView().findViewById<View>(R.id.alarm_recycle) as RecyclerView
+        if (listItems == null) {
+            listItems = mutableListOf<String>()
+            mrecycle.visibility = View.GONE
+        }
+        val layoutManager = LinearLayoutManager(context)
+        mrecycle.layoutManager = layoutManager
+        mrecycle.setHasFixedSize(false)
+        val adpater = mAdapter(listItems)
+        mrecycle.adapter = adpater
+
         msave.setOnClickListener{
             var checkedweek:String = ""
             for (checkbox in checklist){
@@ -93,20 +106,17 @@ class alarmFragment : Fragment() {
                 }
             }
             MyApplication.prefs.savealarm(checkedweek,mstart.text.toString(),mend.text.toString())
+            var list = MyApplication.prefs.getalarm()
+            if (list != null) {
+                listItems.add(list[list.size-1])
+                adpater.notifyItemInserted(list.size)
+                adpater.notifyItemRangeChanged(0,list.size)
+            }
+
             exitaddalarm()
         }
-        var listItems:MutableList<String>? = MyApplication.prefs.getalarm()
-        val mrecycle = requireView().findViewById<View>(R.id.alarm_recycle) as RecyclerView
-        if (listItems == null) {
-            mrecycle.visibility = View.GONE
-        }
-        else {
-            val layoutManager = LinearLayoutManager(context)
-            mrecycle.layoutManager = layoutManager
-            mrecycle.setHasFixedSize(true)
-            val adpater = mAdapter(listItems)
-            mrecycle.adapter = adpater
-        }
+
+
 
 
         // radio button save and default set
