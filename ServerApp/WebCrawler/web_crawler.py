@@ -14,28 +14,29 @@ main_url = "https://www.safekorea.go.kr/idsiSFK/neo/sfk/cs/sfc/dis/disasterMsgLi
 #한 사이클 돌리는 대기 시간
 sleep_time = 1
 #----DB에서 가장 최근 데이터 불러오기----
+try:
+    main_db = pymysql.connect(
+        user=''
+        ,passwd=''
+        ,host=''
+        ,db=''
+        ,charset='utf8'
+    )
+    #user유저네임/passwd비밀번호/host호스트/db데이터베이스명/charset인코딩  port3306
 
-main_db = pymysql.connect(
-    user='user'
-    ,passwd='passwd'
-    ,host='127.0.0.1'
-    ,db='main_db'
-    ,charset='utf8'
-)
-#user유저네임/passwd비밀번호/host호스트/db데이터베이스명/charset인코딩  port3306
+    #검색결과를 딕셔너리 형태로 반환
+    cursor=main_db.cursor(pymysql.cursors.DictCursor)
 
-#검색결과를 딕셔너리 형태로 반환
-cursor=main_db.cursor(pymysql.cursors.DictCursor)
-
-#검색할 명령어
-sql = "SELECT MAX(NUM) FROM Message_List;"
-cursor.execute(sql)
-result=cursor.fetchall()
-number=result[0]['MAX(NUM)']
+    #검색할 명령어
+    sql = "SELECT MAX(NUM) FROM Message_List;"
+    cursor.execute(sql)
+    result=cursor.fetchall()
+    number=result[0]['MAX(NUM)']
+    #불러온 것 중 가장 최근 데이터의 고유번호
+except:    
+    number=91870
+    
 print(number)
-#불러온 것 중 가장 최근 데이터의 고유번호
-
-number=91870
 #---------웹 크롤링 드라이버 옵션---------
 options = webdriver.ChromeOptions()
 
