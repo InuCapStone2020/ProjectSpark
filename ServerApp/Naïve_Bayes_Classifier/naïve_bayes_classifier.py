@@ -26,9 +26,12 @@ class NaiveBayesClassifier:
         data = file.read().split('##')
         for i in range(1,len(data)):
             temp_data = data[i]
-            doc = temp_data.split(']')[1]
+            temp_doc = temp_data.split(']')
+            doc=''
+            for j in range(1,len(temp_doc)):
+                doc += temp_doc[j]
             label = temp_data.split('**')[0]
-            
+            #print(doc)
             docs.append(doc)
             if label == '1': label = '자연재해'
             elif label == '2': label = '전염병'
@@ -189,8 +192,9 @@ class NaiveBayesClassifier:
         else:
             print('기타', etc_class_prob * 100 , '%')
         #해당 결과를 퍼센트 형태로 출력
+            
 
 
-classifier = NaiveBayesClassifier() # use_morph=False
+classifier = NaiveBayesClassifier()
 classifier.train()
 classifier.word_probs
