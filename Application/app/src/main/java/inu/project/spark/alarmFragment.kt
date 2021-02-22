@@ -1,5 +1,6 @@
 package inu.project.spark
 
+import android.app.AlertDialog.THEME_HOLO_LIGHT
 import android.app.Application
 import android.app.TimePickerDialog
 import android.content.Context
@@ -111,6 +112,7 @@ class alarmFragment : Fragment() {
                 listItems.add(list[list.size-1])
                 adpater.notifyItemInserted(list.size)
                 adpater.notifyItemRangeChanged(0,list.size)
+                mrecycle.visibility = View.VISIBLE
             }
 
             exitaddalarm()
@@ -134,6 +136,7 @@ class alarmFragment : Fragment() {
         var hour = time.get(Calendar.HOUR)
         var minute = time.get(Calendar.MINUTE)
         var timestring: String = ""
+
         var timeListener = object : TimePickerDialog.OnTimeSetListener {
             override fun onTimeSet(view: TimePicker?, hourOfDay: Int, minute: Int) {
                 var ampm = "오전"
@@ -152,7 +155,9 @@ class alarmFragment : Fragment() {
                 it.text = timestring
             }
         }
-        var builder = TimePickerDialog(context, timeListener, hour, minute, false).show()
+        var builder = TimePickerDialog(context, android.R.style.Theme_Holo_Dialog_NoActionBar,timeListener, hour, minute, false)
+        builder.window!!.setBackgroundDrawableResource(android.R.color.transparent)
+        builder.show()
     }
 }
 
