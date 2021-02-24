@@ -184,17 +184,17 @@ class NaiveBayesClassifier:
     def classify(self, doc):
         pos_class_prob, neg_class_prob, etc_class_prob = self.class_prob(self.word_probs, doc)
         #해당 문장에 있는 단어를 베이즈 정리를 이용하여 문장이 각 label에 속해있을 확률을 계산
-        
+        result=''
         if pos_class_prob >= neg_class_prob and pos_class_prob >= etc_class_prob:
-            print('자연재해', pos_class_prob * 100, '%')
+            result = ('자연재해/'+str(pos_class_prob * 100)+'%')
         elif neg_class_prob > pos_class_prob and neg_class_prob > etc_class_prob:
-            print('전염병', neg_class_prob * 100 , '%')
+            result = ('전염병/'+str(neg_class_prob * 100)+'%')
         else:
-            print('기타', etc_class_prob * 100 , '%')
+            result = ('기타/'+str(etc_class_prob * 100)+'%')
+        return result
+    
         #해당 결과를 퍼센트 형태로 출력
             
-
-
 classifier = NaiveBayesClassifier()
 classifier.train()
 classifier.word_probs

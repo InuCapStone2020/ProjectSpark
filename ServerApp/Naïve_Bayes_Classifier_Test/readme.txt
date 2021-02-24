@@ -10,13 +10,6 @@ hangul_test.py
 last update 
 테스트 데이터를 가지고 한국어 형태소 분석기를 테스트하는 파이썬 프로그램
 
-naïve_bayes_classifier.py
-last update 21.2.21
-나이브 베이즈 분류기를 이용해 자연재해/전염병을 분류해주는 파이썬 프로그램
-
-naïve_bayes_classifier_update_note.py
-나이브 베이즈 분류기의 업데이트 노트
-
 output_number.txt
 분석 및 분류용 테스트 데이터
 
