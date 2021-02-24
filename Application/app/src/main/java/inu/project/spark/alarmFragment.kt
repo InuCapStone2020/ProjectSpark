@@ -32,8 +32,8 @@ class alarmFragment : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        val fragmentSetting: settingFragment = settingFragment()
         /*
+        val fragmentSetting: settingFragment = settingFragment()
         val mtoolbar = (activity as SubActivity).findViewById<View>(R.id.toolbar_sub) as Toolbar
         mtoolbar.setNavigationOnClickListener{
             (activity as SubActivity).replaceFragment(fragmentSetting)
@@ -114,13 +114,8 @@ class alarmFragment : Fragment() {
                 adpater.notifyItemRangeChanged(0,list.size)
                 mrecycle.visibility = View.VISIBLE
             }
-
             exitaddalarm()
         }
-
-
-
-
         // radio button save and default set
         val mradio = requireView().findViewById<View>(R.id.radio_alarm) as RadioGroup
         var radioi = MyApplication.prefs.getInt("alarm_radio",R.id.radio_alarm1)
@@ -150,7 +145,6 @@ class alarmFragment : Fragment() {
                 else if (hourOfDay == 0){
                     h = 12
                 }
-
                 timestring = "${ampm} ${h}시 ${minute}분"
                 it.text = timestring
             }
