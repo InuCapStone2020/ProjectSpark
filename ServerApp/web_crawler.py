@@ -1,6 +1,5 @@
 from selenium import webdriver
 import time
-import re
 import pymysql
 import naïve_bayes_classifier as NBC
 #--------------글로벌 변수--------------
