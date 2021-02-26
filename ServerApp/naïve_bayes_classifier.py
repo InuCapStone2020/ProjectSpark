@@ -1,6 +1,5 @@
 import math 
 from selenium import webdriver
-import time
 from tqdm.notebook import tqdm
 from konlpy.tag import Komoran
 import re
@@ -12,11 +11,11 @@ etcword=[]
 #테스트용 리스트
 #-----------------------------------------------------------------------
 
-komoran = Komoran()
 class NaiveBayesClassifier:
     def __init__(self, k=0.5):
         self.k = k
         self.word_probs = []
+        self.komoran = Komoran()
         #클래스 초기화
         
     def load_data(self):
@@ -58,7 +57,7 @@ class NaiveBayesClassifier:
             return word_list
         #만약 문장이 한글이 아니라면 띄어쓰기 형태로 구분
             
-        temp_word_list = komoran.nouns(sentence)
+        temp_word_list = self.komoran.nouns(sentence)
         #형태소 분석을 하여 명사만 남김
         
         word_list=[]
