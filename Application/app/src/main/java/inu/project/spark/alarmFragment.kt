@@ -26,20 +26,18 @@ class alarmFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
+        val fragmentSetting: settingFragment = settingFragment()
+        val mtoolbar = (activity as SubActivity).findViewById<View>(R.id.toolbar_sub) as Toolbar
+        mtoolbar.setNavigationOnClickListener {
+            (activity as SubActivity).replaceFragment(fragmentSetting)
+            var title = (activity as SubActivity).findViewById<View>(R.id.toolbar_sub_title) as TextView
+            title.setText(R.string.toolbar_setting_name)
+        }
         return inflater.inflate(R.layout.alarm_fragment, container, false)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        /*
-        val fragmentSetting: settingFragment = settingFragment()
-        val mtoolbar = (activity as SubActivity).findViewById<View>(R.id.toolbar_sub) as Toolbar
-        mtoolbar.setNavigationOnClickListener{
-            (activity as SubActivity).replaceFragment(fragmentSetting)
-            var title = (activity as SubActivity).findViewById<View>(R.id.toolbar_sub_title) as TextView
-            title.setText(R.string.toolbar_setting_name)
-        }*/
         val maddlayout = requireView().findViewById<View>(R.id.add_alarm_layout)
 
         val madd = requireView().findViewById<View>(R.id.add_alarm_text) as TextView

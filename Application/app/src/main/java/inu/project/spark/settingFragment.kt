@@ -16,7 +16,11 @@ class settingFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-
+        val mtoolbar = (activity as SubActivity).findViewById<View>(R.id.toolbar_sub) as androidx.appcompat.widget.Toolbar
+        mtoolbar.setNavigationOnClickListener {
+            var i = Intent(context, MainActivity::class.java)
+            startActivity(i)
+        }
         return inflater.inflate(R.layout.setting_fragment, container, false)
     }
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <local-array name = "local_do">
+    <string-array name = "local_do">
         <item>서울특별시</item>
         <item>부산광역시</item>
         <item>대구광역시</item>
@@ -18,8 +18,8 @@
         <item>경상북도</item>
         <item>경상남도</item>
         <item>제주특별자치도</item>
-    </local-array>
-    <local-array name = "local_do_seoul">
+    </string-array>
+    <string-array name = "local_do_seoul">
         <item>종로구</item>
         <item>중구</item>
         <item>용산구</item>
@@ -45,8 +45,8 @@
         <item>강남구</item>
         <item>송파구</item>
         <item>강동구</item>
-    </local-array>
-    <local-array name = "local_do_busan">
+    </string-array>
+    <string-array name = "local_do_busan">
         <item>중구</item>
         <item>서구</item>
         <item>동구</item>
@@ -63,8 +63,8 @@
         <item>수영구</item>
         <item>사상구</item>
         <item>기장군</item>
-    </local-array>
-    <local-array name = "local_do_daegu">
+    </string-array>
+    <string-array name = "local_do_daegu">
         <item>중구</item>
         <item>동구</item>
         <item>서구</item>
@@ -73,8 +73,8 @@
         <item>수성구</item>
         <item>달서구</item>
         <item>달성군</item>
-    </local-array>
-    <local-array name = "local_do_incheon">
+    </string-array>
+    <string-array name = "local_do_incheon">
         <item>중구</item>
         <item>동구</item>
         <item>미추홀구</item>
@@ -85,36 +85,29 @@
         <item>서구</item>
         <item>강화군</item>
         <item>옹진군</item>
-    </local-array>
-    <local-array name = "local_do_gwangju">
+    </string-array>
+    <string-array name = "local_do_gwangju">
         <item>동구</item>
         <item>서구</item>
         <item>남구</item>
         <item>북구</item>
         <item>광산구</item>
-    </local-array>
-    <local-array name = "local_do_daejeon">
+    </string-array>
+    <string-array name = "local_do_daejeon">
         <item>동구</item>
         <item>중구</item>
         <item>서구</item>
         <item>유성구</item>
         <item>대덕구</item>
-    </local-array>
-    <local-array name = "local_do_ulsan">
+    </string-array>
+    <string-array name = "local_do_ulsan">
         <item>중구</item>
         <item>남구</item>
         <item>동구</item>
         <item>북구</item>
         <item>울주군</item>
-    </local-array>
-    <local-array name = "local_do_daejeon">
-        <item>동구</item>
-        <item>중구</item>
-        <item>서구</item>
-        <item>유성구</item>
-        <item>대덕구</item>
-    </local-array>
-    <local-array name = "local_do_gyeonggido">
+    </string-array>
+    <string-array name = "local_do_gyeonggido">
         <item>수원시</item>
         <item>성남시</item>
         <item>안양시</item>
@@ -146,8 +139,8 @@
         <item>포천시</item>
         <item>연천군</item>
         <item>가평군</item>
-    </local-array>
-    <local-array name = "local_do_gangwondo">
+    </string-array>
+    <string-array name = "local_do_gangwondo">
         <item>춘천시</item>
         <item>원주시</item>
         <item>강릉시</item>
@@ -166,8 +159,8 @@
         <item>인제군</item>
         <item>고성군</item>
         <item>양양군</item>
-    </local-array>
-    <local-array name = "local_do_chungcheongbukdo">
+    </string-array>
+    <string-array name = "local_do_chungcheongbukdo">
         <item>청주시</item>
         <item>충주시</item>
         <item>제천시</item>
@@ -179,8 +172,8 @@
         <item>괴산군</item>
         <item>음성군</item>
         <item>단양군</item>
-    </local-array>
-    <local-array name = "local_do_chungcheongnamdo">
+    </string-array>
+    <string-array name = "local_do_chungcheongnamdo">
         <item>천안시</item>
         <item>공주시</item>
         <item>보령시</item>
@@ -196,8 +189,8 @@
         <item>홍성군</item>
         <item>예산군</item>
         <item>태안군</item>
-    </local-array>
-    <local-array name = "local_do_jeonlabukdo">
+    </string-array>
+    <string-array name = "local_do_jeonlabukdo">
         <item>전주시</item>
         <item>군산시</item>
         <item>익산시</item>
@@ -212,8 +205,8 @@
         <item>순창군</item>
         <item>고창군</item>
         <item>부안군</item>
-    </local-array>
-    <local-array name = "local_do_jeonlanamdo">
+    </string-array>
+    <string-array name = "local_do_jeonlanamdo">
         <item>목포시</item>
         <item>여수시</item>
         <item>순천시</item>
@@ -236,8 +229,8 @@
         <item>완도군</item>
         <item>진도군</item>
         <item>신안군</item>
-    </local-array>
-    <local-array name = "local_do_gyeongsangbukdo">
+    </string-array>
+    <string-array name = "local_do_gyeongsangbukdo">
         <item>포항시</item>
         <item>경주시</item>
         <item>김천시</item>
@@ -261,8 +254,8 @@
         <item>봉화군</item>
         <item>울진군</item>
         <item>울릉군</item>
-    </local-array>
-    <local-array name = "local_do_gyeongsangnamdo">
+    </string-array>
+    <string-array name = "local_do_gyeongsangnamdo">
         <item>창원시</item>
         <item>진주시</item>
         <item>통영시</item>
@@ -281,10 +274,10 @@
         <item>함양군</item>
         <item>거창군</item>
         <item>합천군</item>
-    </local-array>
-    <local-array name = "local_do_jejudo">
+    </string-array>
+    <string-array name = "local_do_jejudo">
         <item>제주시</item>
         <item>서귀포시</item>
-    </local-array>
+    </string-array>
 
 </resources>
