@@ -17,6 +17,10 @@ class mSharedPreferences (context: Context){
     private val alarmweek = "week"
     private val alarmstarttime = "start"
     private val alarmendtime = "end"
+    private val localkey = "local"
+    private val localarray = "localarray"
+    private val local1 = "local1"
+    private val local2 = "local2"
 
     fun getString(key:String, defValue:String):String{
         return prefs.getString(key,defValue).toString()
@@ -99,4 +103,55 @@ class mSharedPreferences (context: Context){
             }
         }
     }
+    fun getlocal():MutableList<String>?{
+        val strjson = prefs.getString(localkey,null)
+        var locallist:MutableList<String>? = null
+        if (strjson != null){
+            try{
+                val localinfo = JSONObject(strjson)
+                val arr = localinfo.getJSONArray(localarray)
+                val c:Int = arr.length()
+                var i:Int = 1
+                locallist = mutableListOf(arr.getJSONObject(0).toString())
+                while(i < c){
+                    val tempObject = arr.getJSONObject(i)
+                    locallist.add(tempObject.toString())
+                    i++
+                }
+            }
+            catch(e:Exception){
+                e.printStackTrace()
+            }
+        }
+        return locallist
+    }
+    fun savelocal(local_first:String,local_second:String){
+        val tempjsonobject = JSONObject()
+        tempjsonobject.put(local1,local_first)
+        tempjsonobject.put(local2,local_second)
+
+        val strjson = prefs.getString(localkey,null)
+        var localinfo = JSONObject()
+        var arr = JSONArray()
+        if (strjson != null){
+            try{
+                localinfo = JSONObject(strjson)
+                arr = localinfo.getJSONArray(localarray)
+            }
+            catch(e:JSONException){
+                e.printStackTrace()
+            }
+        }
+        var locallist:MutableList<String>? = getlocal()
+        if (locallist != null){
+
+        }
+        else{
+
+        }
+        arr.put(tempjsonobject)
+        localinfo.put(localarray,arr)
+        prefs.edit().putString(localkey,localinfo.toString()).apply()
+    }
+
 }
