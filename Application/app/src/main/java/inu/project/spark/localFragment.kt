@@ -125,13 +125,18 @@ class localFragment : Fragment() {
             localaddbutton.setOnClickListener{
                 cspinner1 = localspinner1.selectedItem.toString()
                 cspinner2 = localspinner2.selectedItem.toString()
-                MyApplication.prefs.savelocal(cspinner1,cspinner2)
-                var list = MyApplication.prefs.getlocal()
-                if (list != null) {
-                    listItems.add(list[list.size-1])
-                    adpater.notifyItemInserted(list.size)
-                    adpater.notifyItemRangeChanged(0,list.size)
-                    localrecycle.visibility = View.VISIBLE
+                val saveflag = MyApplication.prefs.savelocal(cspinner1,cspinner2)
+                if (saveflag){
+                    var list = MyApplication.prefs.getlocal()
+                    if (list != null) {
+                        listItems.add(list[list.size-1])
+                        adpater.notifyItemInserted(list.size)
+                        adpater.notifyItemRangeChanged(0,list.size)
+                        localrecycle.visibility = View.VISIBLE
+                    }
+                }
+                else{
+                    //toast 해당 지역이 저장되어있습니다.
                 }
                 builder.dismiss()
             }
@@ -139,9 +144,5 @@ class localFragment : Fragment() {
                 builder.dismiss()
             }
         }
-
-
     }
-
-
 }

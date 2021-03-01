@@ -118,6 +118,7 @@ class mSharedPreferences (context: Context){
                     locallist.add(tempObject.toString())
                     i++
                 }
+                // 지역별 정렬 추가
             }
             catch(e:Exception){
                 e.printStackTrace()
@@ -135,6 +136,7 @@ class mSharedPreferences (context: Context){
         var arr = JSONArray()
         if (strjson != null){
             try{
+                // ++ sort array
                 localinfo = JSONObject(strjson)
                 arr = localinfo.getJSONArray(localarray)
                 var i:Int = 0
