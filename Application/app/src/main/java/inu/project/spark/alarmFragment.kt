@@ -1,11 +1,6 @@
 package inu.project.spark
 
-import android.app.AlertDialog.THEME_HOLO_LIGHT
-import android.app.Application
 import android.app.TimePickerDialog
-import android.content.Context
-import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -13,12 +8,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.widget.Toolbar
-import androidx.fragment.app.FragmentManager
-import androidx.preference.PreferenceFragmentCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import java.util.*
-import kotlin.math.min
 
 
 class alarmFragment : Fragment() {
@@ -88,7 +80,7 @@ class alarmFragment : Fragment() {
         val layoutManager = LinearLayoutManager(context)
         mrecycle.layoutManager = layoutManager
         mrecycle.setHasFixedSize(false)
-        val adpater = mAdapter(listItems)
+        val adpater = alarmAdapter(listItems)
         mrecycle.adapter = adpater
 
         msave.setOnClickListener{

@@ -23,6 +23,7 @@
             android:textSize="20sp" />
 
         <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/local_recycle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 

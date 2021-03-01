@@ -9,13 +9,13 @@ import androidx.recyclerview.widget.RecyclerView
 import org.json.JSONException
 import org.json.JSONObject
 
-class mAdapter(list:MutableList<String>) : RecyclerView.Adapter<mAdapter.MyViewHolder>() {
+class alarmAdapter(list:MutableList<String>) : RecyclerView.Adapter<alarmAdapter.MyViewHolder>() {
     private var jsonList:MutableList<String> = list
     private val alarmweek = "week"
     private val alarmstarttime = "start"
     private val alarmendtime = "end"
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): mAdapter.MyViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): alarmAdapter.MyViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         val view = inflater.inflate(R.layout.alarm_item, parent, false)
         return MyViewHolder(view)

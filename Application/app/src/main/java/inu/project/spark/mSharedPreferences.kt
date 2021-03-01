@@ -125,7 +125,7 @@ class mSharedPreferences (context: Context){
         }
         return locallist
     }
-    fun savelocal(local_first:String,local_second:String){
+    fun savelocal(local_first:String,local_second:String):Boolean{
         val tempjsonobject = JSONObject()
         tempjsonobject.put(local1,local_first)
         tempjsonobject.put(local2,local_second)
@@ -137,21 +137,47 @@ class mSharedPreferences (context: Context){
             try{
                 localinfo = JSONObject(strjson)
                 arr = localinfo.getJSONArray(localarray)
+                var i:Int = 0
+                while (i<arr.length()){
+                    val tempObject = arr.getJSONObject(i)
+                    val templocal1 = tempObject.get(local1).toString()
+                    val templocal2 = tempObject.get(local2).toString()
+                    if (templocal1 == local_first && templocal2 == local_second){
+                        return false
+                    }
+                    i++
+                }
             }
             catch(e:JSONException){
                 e.printStackTrace()
             }
         }
-        var locallist:MutableList<String>? = getlocal()
-        if (locallist != null){
 
-        }
-        else{
 
-        }
         arr.put(tempjsonobject)
         localinfo.put(localarray,arr)
         prefs.edit().putString(localkey,localinfo.toString()).apply()
+        return true
+    }
+    fun deletelocal(index:Int){
+        var temparr:MutableList<String>? = getlocal()
+        if (temparr != null){
+            try{
+                temparr.removeAt(index)
+                val tempjsonarray = JSONArray()
+                for(i in temparr){
+                    val tempstr = i
+                    val tempObject = JSONObject(tempstr)
+                    tempjsonarray.put(tempObject)
+                }
+                val temparrayobject = JSONObject()
+                temparrayobject.put(localarray,tempjsonarray)
+                prefs.edit().putString(localkey,temparrayobject.toString()).apply()
+            }
+            catch(e:Exception){
+                e.printStackTrace()
+            }
+        }
     }
 
 }

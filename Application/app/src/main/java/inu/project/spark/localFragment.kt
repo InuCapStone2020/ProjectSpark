@@ -12,6 +12,8 @@ import android.widget.*
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 
 class localFragment : Fragment() {
     override fun onCreateView(
@@ -29,6 +31,19 @@ class localFragment : Fragment() {
     }
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+
+        var listItems:MutableList<String>? = MyApplication.prefs.getlocal()
+        val localrecycle = requireView().findViewById<View>(R.id.local_recycle) as RecyclerView
+        if (listItems == null) {
+            listItems = mutableListOf<String>()
+            localrecycle.visibility = View.GONE
+        }
+        val layoutManager = LinearLayoutManager(context)
+        localrecycle.layoutManager = layoutManager
+        localrecycle.setHasFixedSize(false)
+        val adpater = localAdapter(listItems)
+        localrecycle.adapter = adpater
+
         val add_button = requireView().findViewById<View>(R.id.add_local_button) as Button
         var adspinner1:ArrayAdapter<String>
         var adspinner2:ArrayAdapter<String>
@@ -103,7 +118,6 @@ class localFragment : Fragment() {
                 override fun onNothingSelected(parent: AdapterView<*>?) {
                 }
             }
-
             var cspinner1:String = ""
             var cspinner2:String = ""
             val localaddbutton:Button =builder.findViewById(R.id.add_local_dialog) as Button
@@ -111,13 +125,21 @@ class localFragment : Fragment() {
             localaddbutton.setOnClickListener{
                 cspinner1 = localspinner1.selectedItem.toString()
                 cspinner2 = localspinner2.selectedItem.toString()
-
+                MyApplication.prefs.savelocal(cspinner1,cspinner2)
+                var list = MyApplication.prefs.getlocal()
+                if (list != null) {
+                    listItems.add(list[list.size-1])
+                    adpater.notifyItemInserted(list.size)
+                    adpater.notifyItemRangeChanged(0,list.size)
+                    localrecycle.visibility = View.VISIBLE
+                }
                 builder.dismiss()
             }
             localcancelbutton.setOnClickListener{
                 builder.dismiss()
             }
         }
+
 
     }
 
