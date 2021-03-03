@@ -10,15 +10,38 @@ negativeword=[]
 etcword=[]
 #테스트용 리스트
 #-----------------------------------------------------------------------
-
 class NaiveBayesClassifier:
-    def __init__(self, k=0.5):
+    def __init__(self, k=0.5, c = False):
         self.k = k
         self.word_probs = []
         self.komoran = Komoran()
+        self.clear = c
         #클래스 초기화
+        try:
+            file=open('word_prob_list.txt','r+', encoding='utf8')
+            while(1):
+                line = file.readline()
+                if not line:
+                    break
+                temp = line.split('/')
+                temp[3] = temp[3].replace('\n','')
+                for i in range(1,len(temp)):
+                    if temp[i] == '0.0':
+                        temp[i] = 1.e-10
+                    else:
+                        temp[i] = float(temp[i])
+                key, pos, neg, etc = temp
+                self.word_probs.append((key,pos,neg,etc))
+            file.close()
+        except:
+            print("file open error(word_prob_list.txt)")
+            temp = []
+            docs, labels = self.load_initial_data()
+            for i in range(len(docs)):
+                temp.append({'CONTENT':(']'+docs[i]),'EVENT':labels[i]})
+            self.train(temp)
         
-    def load_data(self):
+    def load_initial_data(self):
         docs = []
         labels = []
         file=open('output_train_all.txt','r',encoding='utf8')
@@ -30,13 +53,29 @@ class NaiveBayesClassifier:
             for j in range(1,len(temp_doc)):
                 doc += temp_doc[j]
             label = temp_data.split('**')[0]
-            #print(doc)
             docs.append(doc)
             if label == '1': label = '자연재해'
             elif label == '2': label = '전염병'
             elif label == '3': label = '기타'
             labels.append(label)
+        return docs, labels
+    
+    def load_data(self, data_list):
+        docs = []
+        labels = []
         
+        if self.clear == True:
+            docs, labels = self.load_initial_data()
+        
+        for i in data_list:
+            temp_data = i['CONTENT']
+            temp_doc = temp_data.split(']')
+            doc=''
+            for j in range(1,len(temp_doc)):
+                doc += temp_doc[j]
+            docs.append(doc)
+            labels.append(i['EVENT'])
+            
         return docs, labels
         #output_train 파일에서 지도학습할 데이터를 가져와 docs와 labels로 구분
     
@@ -88,11 +127,6 @@ class NaiveBayesClassifier:
         # 처음 나온 거라면 count_dict={'word':{'1':10, '2':5 '3':1}, ...}의 현태로 저장
         # 아니라면 label 등장횟수 +1
         
-        
-        #-----------------------------------------------------------------------
-        print('num of words...', len(count_dict))
-        #사전에 있는 단어의 개수 출력 - 테스트용
-        #-----------------------------------------------------------------------
         return count_dict
 
     def word_prob(self, count_dict, pos_class_num, neg_class_num,etc_class_num, k):
@@ -119,6 +153,13 @@ class NaiveBayesClassifier:
             
             #각 계산 결과를 튜플 형태로 묶어 리턴
             
+        file=open('word_prob_list.txt','w+', encoding='utf8')
+        if len(word_prob_list) != 0:
+            for i in word_prob_list:
+                line = i[0] + '/' + str(i[1]) + '/' + str(i[2]) + '/' + str(i[3]) + '\n'
+                file.write(line)
+        file.close()
+        
         return word_prob_list
 
     def class_prob(self, word_prob_list, test_sentence):
@@ -142,7 +183,6 @@ class NaiveBayesClassifier:
         sent_etc_class_prob = math.exp(sent_log_etc_class_prob)
         
         #로그 취한걸 해제하기 위해 exp를 사용
-        
         pos_class_prob = sent_pos_class_prob/(sent_pos_class_prob+sent_neg_class_prob+sent_etc_class_prob)
         neg_class_prob = sent_neg_class_prob/(sent_pos_class_prob+sent_neg_class_prob+sent_etc_class_prob)
         etc_class_prob = sent_etc_class_prob/(sent_pos_class_prob+sent_neg_class_prob+sent_etc_class_prob)
@@ -150,37 +190,62 @@ class NaiveBayesClassifier:
         #전체 확률 분에 각 label별 확률을 계산
         
         return pos_class_prob, neg_class_prob, etc_class_prob
-    
+        
         # 베이즈 정리 계산
-    def train(self):
+    
+    def load_file_data(self):
+        docs = []
+        labels = []
+        try:
+            file=open('trained_data.txt','r',encoding='utf8')
+            line=file.read()
+            line = line.split('***')
+            line.pop()
+            for i in line:
+                label, doc = i.split('###')
+                docs.append(doc)
+                labels.append(label)
+        except:
+            print('file open error(trained_data.txt)')
+        return docs, labels
+    
+    def write_file_data(self, docs, labels):
+        mode = 'a+'
+        if self.clear == True:
+            mode = 'w+'
+        file=open('trained_data.txt',mode, encoding='utf8')
+        for i in range(len(docs)):
+            line = labels[i] + '###' + docs[i] + '***'
+            #file.write(line)
+        file.close()
         
-        train_docs, train_labels = self.load_data()
+        
+        
+    def train(self, data_list):
+        
+        train_docs, train_labels = self.load_data(data_list)
         #데이터를 가져온 후 저장
+        if len(train_docs) != 0:
+            if self.clear == False:
+                docs, labels = self.load_file_data()
+                for i in range(len(docs)):
+                    train_docs.append(docs[i])
+                    train_labels.append(labels[i])
+            
+            word_count_dict = self.count_words(train_docs, train_labels)
+            #등장 횟수를 세어 dictionary형태로 저장
+
+            pos_class_num = len([label for label in train_labels if label == '자연재해'])
+            neg_class_num = len([label for label in train_labels if label == '전염병'])
+            etc_class_num = len([label for label in train_labels if label == '기타'])
+            #각 label별 등장 횟수 저장
+
+            self.word_probs = self.word_prob(word_count_dict, pos_class_num, neg_class_num, etc_class_num, self.k)
+            #각 단어가 각 label일 확률을 계산하여 저장
+
+            self.write_file_data(train_docs, train_labels)
         
-        word_count_dict = self.count_words(train_docs, train_labels)
-        #등장 횟수를 세어 dictionary형태로 저장
-        
-        pos_class_num = len([label for label in train_labels if label == '자연재해'])
-        neg_class_num = len([label for label in train_labels if label == '전염병'])
-        etc_class_num = len([label for label in train_labels if label == '기타'])
-        #각 label별 등장 횟수 저장
-        
-        self.word_probs = self.word_prob(word_count_dict, pos_class_num, neg_class_num, etc_class_num, self.k)
-        #각 단어가 각 label일 확률을 계산하여 저장
-        
-        
-        #-----------------------------------------------------------------------
-        for i in range(len(self.word_probs)):
-            if self.word_probs[i][1] >= self.word_probs[i][2] and self.word_probs[i][1] >= self.word_probs[i][3]:
-                positiveword.append(self.word_probs[i][0])
-            elif self.word_probs[i][2] > self.word_probs[i][1] and self.word_probs[i][2] > self.word_probs[i][3]:
-                negativeword.append(self.word_probs[i][0])
-            else:
-                etcword.append(self.word_probs[i][0])
-        #각 label별로 어떤 데이터가 많은지 알아보기 위한 테스트
-        #-----------------------------------------------------------------------
-        
-    def classify(self, doc):
+    def classify(self, doc):     
         pos_class_prob, neg_class_prob, etc_class_prob = self.class_prob(self.word_probs, doc)
         #해당 문장에 있는 단어를 베이즈 정리를 이용하여 문장이 각 label에 속해있을 확률을 계산
         result=''
@@ -191,9 +256,4 @@ class NaiveBayesClassifier:
         else:
             result = ('기타/'+str(etc_class_prob * 100)+'%')
         return result
-    
         #해당 결과를 퍼센트 형태로 출력
-            
-classifier = NaiveBayesClassifier()
-classifier.train()
-classifier.word_probs
