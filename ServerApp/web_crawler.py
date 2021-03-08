@@ -11,7 +11,7 @@ target="C:\\Users\\podoCU\\Exercises\\chromedriver.exe"
 main_url = "https://www.safekorea.go.kr/idsiSFK/neo/sfk/cs/sfc/dis/disasterMsgList.jsp?menuSeq=679"
 
 #한 사이클 돌리는 대기 시간
-sleep_time = 1
+sleep_time = 0.1
 
 #데이터베이스 접속용 변수
 user=''
@@ -20,18 +20,18 @@ host=''
 db=''
 charset=''
 
-#----웹 크롤링 모듈----
 class WebCrawler:
-    def __init__(self):
+    def __init__(self, c = False):
         self.number=0
-    def load_data(self):
+        self.main_db = pymysql.connect(user=user,passwd=passwd,host=host,db=db,charset=charset)
+        self.classifier = NBC.NaiveBayesClassifier(c)
+        self.clear = c
+        #user유저네임/passwd비밀번호/host호스트/db데이터베이스명/charset인코딩
+    def load_number(self):
         #----DB에서 가장 최근 데이터 불러오기----
         try:
-            main_db = pymysql.connect(user=user,passwd=passwd,host=host,db=db,charset=charset)
-            #user유저네임/passwd비밀번호/host호스트/db데이터베이스명/charset인코딩
-
             #검색결과를 딕셔너리 형태로 반환
-            cursor=main_db.cursor(pymysql.cursors.DictCursor)
+            cursor=self.main_db.cursor(pymysql.cursors.DictCursor)
 
             #검색할 명령어
             sql = "SELECT MAX(NUM) FROM Message_List;"
@@ -40,10 +40,27 @@ class WebCrawler:
             self.number=result[0]['MAX(NUM)']
             #불러온 것 중 가장 최근 데이터의 고유번호
             if self.number==None:
-                self.number=94130
+                self.number=95800
         except:    
-            self.number=94130
-        
+            self.number=95800
+            
+    def load_db_data(self):
+        cursor=self.main_db.cursor(pymysql.cursors.DictCursor)
+        sql="SELECT * FROM Message_List"
+        if self.clear == False:            
+            sql +=" WHERE NUM > "+str(self.number)
+        sql += ";"
+        cursor.execute(sql)
+        data=[]
+        while(1):
+            result=cursor.fetchone()
+            if result != None:
+                data.append(result)
+            else:
+                break
+        return data
+
+            
     def crawl_data(self):
         #---------웹 크롤링 드라이버 옵션---------
         options = webdriver.ChromeOptions()
@@ -133,10 +150,9 @@ class WebCrawler:
                 data_message_all.append(data_message)
         return data_message_all   
     def webcrawl(self):
-        self.load_data()
+        self.load_number()
         data_message_all = self.crawl_data()
-        main_db = pymysql.connect(user=user,passwd=passwd,host=host,db=db,charset=charset)
-        cursor=main_db.cursor(pymysql.cursors.DictCursor)
+        cursor=self.main_db.cursor(pymysql.cursors.DictCursor)
         for i in data_message_all:
             num=str(i["num"])
             sub_num=str(i["sub_num"])
@@ -144,13 +160,20 @@ class WebCrawler:
             time=i["time"]
             place=i["place"]
             text=i["text"] 
-            event=(classifier.classify(text)).split('/')[0]
+            event=(self.classifier.classify(text)).split('/')[0]
             sql = 'INSERT INTO Message_List(NUM,SUBNUM,M_DATE,M_TIME,REGION,CONTENT,EVENT) VALUES (%s,%s,"%s","%s","%s","%s","%s");'%(num,sub_num,date,time,place,text,event)
-            print(sql)
-            cursor.execute(sql)
-        main_db.commit()
+            try:
+                cursor.execute(sql)
+                print(sql)
+            except:
+                continue
+        self.main_db.commit()
+        print("db upload finished")
+        data_list = self.load_db_data()
+        
+        print(len(data_list),"data added")
+        self.classifier.train(data_list)
+        print("train finished")
 
-classifier = NBC.NaiveBayesClassifier()
-classifier.train()
-crawler = WebCrawler()
+crawler = WebCrawler(False)
 crawler.webcrawl()
