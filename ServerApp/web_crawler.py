@@ -153,6 +153,8 @@ class WebCrawler:
         self.load_number()
         data_message_all = self.crawl_data()
         cursor=self.main_db.cursor(pymysql.cursors.DictCursor)
+        #DB에서 데이터 가져온 후 그 번호까지 크롤링
+        
         for i in data_message_all:
             num=str(i["num"])
             sub_num=str(i["sub_num"])
@@ -165,12 +167,17 @@ class WebCrawler:
             try:
                 cursor.execute(sql)
                 print(sql)
+                #DB에 저장후 성공시 sql 출력
+                
             except:
                 continue
+                #실패시 넘어감
+                
         self.main_db.commit()
         print("db upload finished")
         data_list = self.load_db_data()
-        
+        if self.clear == True:
+            print("data cleared")
         print(len(data_list),"data added")
         self.classifier.train(data_list)
         print("train finished")
