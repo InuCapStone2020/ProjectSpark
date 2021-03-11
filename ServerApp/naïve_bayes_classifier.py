@@ -12,11 +12,16 @@ etcword=[]
 #-----------------------------------------------------------------------
 class NaiveBayesClassifier:
     def __init__(self, k=0.5, c = False):
-        self.k = k
+        self.k = k 
         self.word_probs = []
         self.komoran = Komoran()
         self.clear = c
-        #클래스 초기화
+        
+        #k 라플라스 스무딩을 위한 변수
+        #word_probs 단어에 대한 확률을 저장 
+        #komoran 사용하는 한국어 형태소 분석기
+        #clear 데이터를 새로 저장할건지 구분하는 제어 변수
+        
         try:
             file=open('word_prob_list.txt','r+', encoding='utf8')
             while(1):
@@ -33,6 +38,8 @@ class NaiveBayesClassifier:
                 key, pos, neg, etc = temp
                 self.word_probs.append((key,pos,neg,etc))
             file.close()
+            
+            #단어별 확률을 저장한 파일을 불러와 word_prob에 저장
         except:
             print("file open error(word_prob_list.txt)")
             temp = []
@@ -40,6 +47,8 @@ class NaiveBayesClassifier:
             for i in range(len(docs)):
                 temp.append({'CONTENT':(']'+docs[i]),'EVENT':labels[i]})
             self.train(temp)
+            
+            #파일 불러오기가 실패한다면 분류 완료된 파일을 불러와 word_prob에 저장
         
     def load_initial_data(self):
         docs = []
@@ -59,6 +68,8 @@ class NaiveBayesClassifier:
             elif label == '3': label = '기타'
             labels.append(label)
         return docs, labels
+        
+        #분류 완료된 파일을 불러와 docs, labels에 저장
     
     def load_data(self, data_list):
         docs = []
@@ -68,6 +79,9 @@ class NaiveBayesClassifier:
             docs, labels = self.load_initial_data()
         
         for i in data_list:
+            if i['EVENT'] == '미분류':
+                continue
+            
             temp_data = i['CONTENT']
             temp_doc = temp_data.split(']')
             doc=''
@@ -77,7 +91,7 @@ class NaiveBayesClassifier:
             labels.append(i['EVENT'])
             
         return docs, labels
-        #output_train 파일에서 지도학습할 데이터를 가져와 docs와 labels로 구분
+        #입력된 데이터를 docs, labels에 저장
     
     def tokenize(self, sentence):
         stopword_list=['[',']','(',')','.','~','0','1','2','3','4','5','6','7','8','9','0',
@@ -110,7 +124,7 @@ class NaiveBayesClassifier:
                         word_list.append(j)
                         break
         #한 글자를 제거
-        
+        #whiteword_list에 있는 글자는 제거 안함
         return word_list
 
     def count_words(self, docs, labels):
@@ -159,6 +173,7 @@ class NaiveBayesClassifier:
                 line = i[0] + '/' + str(i[1]) + '/' + str(i[2]) + '/' + str(i[3]) + '\n'
                 file.write(line)
         file.close()
+        #단어별 확률을 저장한 파일을 생성
         
         return word_prob_list
 
@@ -191,8 +206,6 @@ class NaiveBayesClassifier:
         
         return pos_class_prob, neg_class_prob, etc_class_prob
         
-        # 베이즈 정리 계산
-    
     def load_file_data(self):
         docs = []
         labels = []
@@ -201,13 +214,19 @@ class NaiveBayesClassifier:
             line=file.read()
             line = line.split('***')
             line.pop()
+            #마지막 데이터 삭제
+            
             for i in line:
                 label, doc = i.split('###')
+                if label == '미분류':
+                    continue
+                
                 docs.append(doc)
                 labels.append(label)
         except:
             print('file open error(trained_data.txt)')
         return docs, labels
+        #파일에서 데이터를 불러와 label, doc에 저장
     
     def write_file_data(self, docs, labels):
         mode = 'a+'
@@ -219,7 +238,8 @@ class NaiveBayesClassifier:
             #file.write(line)
         file.close()
         
-        
+        #파일에 데이터를 저장
+        #clear가 false면 추가, true면 새로 씀
         
     def train(self, data_list):
         
@@ -249,11 +269,16 @@ class NaiveBayesClassifier:
         pos_class_prob, neg_class_prob, etc_class_prob = self.class_prob(self.word_probs, doc)
         #해당 문장에 있는 단어를 베이즈 정리를 이용하여 문장이 각 label에 속해있을 확률을 계산
         result=''
-        if pos_class_prob >= neg_class_prob and pos_class_prob >= etc_class_prob:
+        max_prob = max(pos_class_prob, neg_class_prob, etc_class_prob)
+        
+        if pos_class_prob == max_prob:
             result = ('자연재해/'+str(pos_class_prob * 100)+'%')
-        elif neg_class_prob > pos_class_prob and neg_class_prob > etc_class_prob:
+        elif neg_class_prob == max_prob:
             result = ('전염병/'+str(neg_class_prob * 100)+'%')
         else:
             result = ('기타/'+str(etc_class_prob * 100)+'%')
+            
+        if max_prob < 0.5:
+            result = ('미분류/'+str(max_prob)+'%')
+        
         return result
-        #해당 결과를 퍼센트 형태로 출력
