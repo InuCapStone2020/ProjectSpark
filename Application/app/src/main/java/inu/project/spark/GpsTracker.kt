@@ -12,10 +12,10 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.content.ContextCompat
 
+// optimize
 class GpsTracker(context:Context) : Service(),LocationListener {
 
     var mContext: Context
-
     private var MIN_DISTANCE_CHANGE_FOR_UPDATES:Float = 10f;
     private var MIN_TIME_BW_UPDATES:Long = 1000 * 60 * 1;
     private var location: Location?
@@ -74,7 +74,7 @@ class GpsTracker(context:Context) : Service(),LocationListener {
 
                     if (locationManager != null)
                     {
-                        location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                        location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
                         if (location != null)
                         {
                             latitude = location!!.getLatitude()

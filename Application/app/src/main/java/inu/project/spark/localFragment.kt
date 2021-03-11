@@ -26,6 +26,7 @@ import java.util.*
 
 
 class localFragment : Fragment() {
+    private var llistItems:MutableList<String>? = null
     override fun onCreateView(
             inflater: LayoutInflater, container: ViewGroup?,
             savedInstanceState: Bundle?
@@ -41,18 +42,17 @@ class localFragment : Fragment() {
     }
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-
-        var listItems:MutableList<String>? = MyApplication.prefs.getlocal()
+        llistItems = MyApplication.prefs.getlocal()
+        val ladpater = localAdapter(llistItems!!)
         val localrecycle = requireView().findViewById<View>(R.id.local_recycle) as RecyclerView
-        if (listItems == null) {
-            listItems = mutableListOf<String>()
+        if (llistItems == null) {
+            llistItems = mutableListOf<String>()
             localrecycle.visibility = View.GONE
         }
         val layoutManager = LinearLayoutManager(context)
         localrecycle.layoutManager = layoutManager
         localrecycle.setHasFixedSize(false)
-        val adpater = localAdapter(listItems)
-        localrecycle.adapter = adpater
+        localrecycle.adapter = ladpater
 
         val add_button = requireView().findViewById<View>(R.id.add_local_button) as Button
         var adspinner1:ArrayAdapter<String>
@@ -122,33 +122,20 @@ class localFragment : Fragment() {
                             localarray2 = resources.getStringArray(R.array.local_do_all)
                         }
                     }
-                    adspinner2 = ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_dropdown_item, localarray2);
+                    adspinner2 = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, localarray2)
                     localspinner2.adapter = adspinner2
                 }
-
                 override fun onNothingSelected(parent: AdapterView<*>?) {
                 }
             }
-            var cspinner1: String = ""
-            var cspinner2: String = ""
+            var cspinner1: String
+            var cspinner2: String
             val localaddbutton: Button = builder.findViewById(R.id.add_local_dialog) as Button
             val localcancelbutton: Button = builder.findViewById(R.id.cancel_local_dialog) as Button
             localaddbutton.setOnClickListener {
                 cspinner1 = localspinner1.selectedItem.toString()
                 cspinner2 = localspinner2.selectedItem.toString()
-                val saveflag = MyApplication.prefs.savelocal(cspinner1, cspinner2)
-                if (saveflag) {
-                    var list = MyApplication.prefs.getlocal()
-                    if (list != null) {
-                        listItems.add(list[list.size - 1])
-                        adpater.notifyItemInserted(list.size)
-                        adpater.notifyItemRangeChanged(0, list.size)
-                        localrecycle.visibility = View.VISIBLE
-                    }
-                } else {
-                    // error Toast does not show on screen
-                    Toast.makeText(context, "해당 지역이 저장 되어 있습니다.", Toast.LENGTH_LONG).show()
-                }
+                addlocal(cspinner1,cspinner2)
                 builder.dismiss()
             }
             localcancelbutton.setOnClickListener {
@@ -160,17 +147,17 @@ class localFragment : Fragment() {
             if (!checkLocationServicesStatus()) {
                 showDialogForLocationServiceSetting()
             }
-            checkRunTimePermission()
-            val local1:String
-            val local2:String
-            gpsTracker = GpsTracker(requireContext())
-            val latitude:Double = gpsTracker.getLatitude()
-            val longitude:Double = gpsTracker.getLongitude()
-            val address:String = getCurrentAddress(latitude,longitude)
-            val test = requireView().findViewById<View>(R.id.testforgps) as TextView
-            test.text = address
-
-
+            else{
+                if(checkRunTimePermission()){
+                    gpsTracker = GpsTracker(requireContext())
+                    val latitude:Double = gpsTracker.getLatitude()
+                    val longitude:Double = gpsTracker.getLongitude()
+                    val address:String = getCurrentAddress(latitude,longitude)
+                    val test = requireView().findViewById<View>(R.id.testforgps) as TextView
+                    test.text = address
+                    addDialog(address)
+                }
+            }
         }
     }
     private val REQUIRED_PERMISSIONS = arrayOf<String>(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
@@ -189,19 +176,25 @@ class localFragment : Fragment() {
         } catch (ioException: IOException) {
             //네트워크 문제
             Toast.makeText(context, "지오코더 서비스 사용불가", Toast.LENGTH_LONG).show()
-            return "지오코더 서비스 사용불가";
+            return "지오코더 서비스 사용불가"
         } catch (illegalArgumentException:IllegalArgumentException) {
-            Toast.makeText(context, "잘못된 GPS 좌표", Toast.LENGTH_LONG).show();
-            return "잘못된 GPS 좌표";
+            Toast.makeText(context, "잘못된 GPS 좌표", Toast.LENGTH_LONG).show()
+            return "잘못된 GPS 좌표"
         }
         if (addresses == null || addresses.size == 0) {
-            Toast.makeText(context, "주소 미발견", Toast.LENGTH_LONG).show();
-            return "주소 미발견";
+            Toast.makeText(context, "주소 미발견", Toast.LENGTH_LONG).show()
+            return "주소 미발견"
         }
         val address:Address = addresses.get(0);
-        return address.getAddressLine(0).toString()+"\n";
+        var str=""
+        if (address.countryCode != "KR"){
+            Toast.makeText(context, "국내 주소가 아닙니다.", Toast.LENGTH_LONG).show()
+            return address.countryCode
+        }
+        str+=address.getAddressLine(0).toString().split(" ")[1] + " " + address.getAddressLine(0).toString().split(" ")[2]
+        return str
     }
-    fun checkRunTimePermission(){
+    fun checkRunTimePermission():Boolean{
         //런타임 퍼미션 처리
         // 1. 위치 퍼미션을 가지고 있는지 체크합니다.
         val hasFineLocationPermission:Int = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
@@ -209,49 +202,74 @@ class localFragment : Fragment() {
 
         if (hasFineLocationPermission == PackageManager.PERMISSION_GRANTED &&
                 hasCoarseLocationPermission == PackageManager.PERMISSION_GRANTED) {
-            // 2. 이미 퍼미션을 가지고 있다면
-            // ( 안드로이드 6.0 이하 버전은 런타임 퍼미션이 필요없기 때문에 이미 허용된 걸로 인식합니다.)
-            // 3.  위치 값을 가져올 수 있음
-
+            return true
         } else {
             //2. 퍼미션 요청을 허용한 적이 없다면 퍼미션 요청이 필요합니다. 2가지 경우(3-1, 4-1)가 있습니다.
             // 3-1. 사용자가 퍼미션 거부를 한 적이 있는 경우에는
             if (ActivityCompat.shouldShowRequestPermissionRationale(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION)) {
                 // 3-2. 요청을 진행하기 전에 사용자가에게 퍼미션이 필요한 이유를 설명해줄 필요가 있습니다.
-                Toast.makeText(context, "이 기능을 실행하려면 위치 접근 권한이 필요합니다.", Toast.LENGTH_LONG).show();
+                Toast.makeText(context, "이 기능을 실행하려면 위치 접근 권한이 필요합니다.", Toast.LENGTH_LONG).show()
                 // 3-3. 사용자게에 퍼미션 요청을 합니다. 요청 결과는 onRequestPermissionResult에서 수신됩니다.
                 ActivityCompat.requestPermissions(requireActivity(), REQUIRED_PERMISSIONS,
-                        PERMISSIONS_REQUEST_CODE);
-
-
+                        PERMISSIONS_REQUEST_CODE)
             } else {
                 // 4-1. 사용자가 퍼미션 거부를 한 적이 없는 경우에는 퍼미션 요청을 바로 합니다.
                 // 요청 결과는 onRequestPermissionResult에서 수신됩니다.
                 ActivityCompat.requestPermissions(requireActivity(), REQUIRED_PERMISSIONS,
-                        PERMISSIONS_REQUEST_CODE);
+                        PERMISSIONS_REQUEST_CODE)
             }
         }
+        return false
     }
 
     fun checkLocationServicesStatus():Boolean {
         val locationManager:LocationManager = requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
     }
-
-    private fun showDialogForLocationServiceSetting() {
-        val builder: AlertDialog.Builder  = AlertDialog.Builder(requireContext())
-        builder.setTitle("위치 서비스 비활성화")
-        builder.setMessage("앱을 사용하기 위해서는 위치 서비스가 필요합니다.\n 위치 설정을 수정하시겠습니까?")
+    private fun addDialog(local:String){
+        val builder: AlertDialog.Builder = AlertDialog.Builder(requireContext())
+        builder.setTitle("현재 위치 추가")
+        builder.setMessage(local + "\n 추가 하시겠습니까?")
         builder.setCancelable(true)
-        builder.setPositiveButton("설정")  { dialogInterface: DialogInterface, i: Int ->
-            val callGPSSettingIntent: Intent = Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-            startActivityForResult(callGPSSettingIntent, GPS_ENABLE_REQUEST_CODE )
-
+        builder.setPositiveButton("확인")  { dialogInterface: DialogInterface, i: Int ->
+            val cspinner1 = local.split(" ")[0]
+            val cspinner2 = local.split(" ")[1]
+            addlocal(cspinner1,cspinner2)
         }
         builder.setNegativeButton("취소") { dialogInterface: DialogInterface, i: Int ->
             dialogInterface.cancel()
         }
         builder.create().show()
     }
+    private fun showDialogForLocationServiceSetting() {
+        val builder: AlertDialog.Builder = AlertDialog.Builder(requireContext())
+        builder.setTitle("위치 서비스 비활성화")
+        builder.setMessage("앱을 사용하기 위해서는 위치 서비스가 필요합니다.\n 위치 설정을 수정하시겠습니까?")
+        builder.setCancelable(true)
+        builder.setPositiveButton("설정")  { dialogInterface: DialogInterface, i: Int ->
+            val callGPSSettingIntent: Intent = Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+            startActivityForResult(callGPSSettingIntent, GPS_ENABLE_REQUEST_CODE )
+        }
+        builder.setNegativeButton("취소") { dialogInterface: DialogInterface, i: Int ->
+            dialogInterface.cancel()
+        }
+        builder.create().show()
+    }
+    private fun addlocal(cspinner1:String,cspinner2:String){
+        val saveflag = MyApplication.prefs.savelocal(cspinner1, cspinner2)
+        val localrecycle = requireView().findViewById<View>(R.id.local_recycle) as RecyclerView
+        val ladpater = localAdapter(llistItems!!)
+        if (saveflag) {
+            val list = MyApplication.prefs.getlocal()
+            if (list != null) {
+                llistItems!!.add(list[list.size - 1])
+                ladpater.notifyItemInserted(list.size)
+                ladpater.notifyItemRangeChanged(0, list.size)
+                localrecycle.visibility = View.VISIBLE
+            }
+        } else {
+            Toast.makeText(context, "해당 지역이 저장 되어 있습니다.", Toast.LENGTH_LONG).show()
+        }
 
+    }
 }
