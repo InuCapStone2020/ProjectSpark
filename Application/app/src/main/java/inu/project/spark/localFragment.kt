@@ -27,6 +27,7 @@ import java.util.*
 
 class localFragment : Fragment() {
     private var llistItems:MutableList<String>? = null
+    private var ladpater:localAdapter? = null
     override fun onCreateView(
             inflater: LayoutInflater, container: ViewGroup?,
             savedInstanceState: Bundle?
@@ -43,7 +44,7 @@ class localFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         llistItems = MyApplication.prefs.getlocal()
-        val ladpater = localAdapter(llistItems!!)
+
         val localrecycle = requireView().findViewById<View>(R.id.local_recycle) as RecyclerView
         if (llistItems == null) {
             llistItems = mutableListOf<String>()
@@ -52,6 +53,7 @@ class localFragment : Fragment() {
         val layoutManager = LinearLayoutManager(context)
         localrecycle.layoutManager = layoutManager
         localrecycle.setHasFixedSize(false)
+        ladpater = localAdapter(llistItems!!)
         localrecycle.adapter = ladpater
 
         val add_button = requireView().findViewById<View>(R.id.add_local_button) as Button
@@ -153,9 +155,9 @@ class localFragment : Fragment() {
                     val latitude:Double = gpsTracker.getLatitude()
                     val longitude:Double = gpsTracker.getLongitude()
                     val address:String = getCurrentAddress(latitude,longitude)
-                    val test = requireView().findViewById<View>(R.id.testforgps) as TextView
-                    test.text = address
-                    addDialog(address)
+                    if (address != "false"){
+                        addDialog(address)
+                    }
                 }
             }
         }
@@ -176,20 +178,20 @@ class localFragment : Fragment() {
         } catch (ioException: IOException) {
             //네트워크 문제
             Toast.makeText(context, "지오코더 서비스 사용불가", Toast.LENGTH_LONG).show()
-            return "지오코더 서비스 사용불가"
+            return "false"
         } catch (illegalArgumentException:IllegalArgumentException) {
             Toast.makeText(context, "잘못된 GPS 좌표", Toast.LENGTH_LONG).show()
-            return "잘못된 GPS 좌표"
+            return "false"
         }
         if (addresses == null || addresses.size == 0) {
             Toast.makeText(context, "주소 미발견", Toast.LENGTH_LONG).show()
-            return "주소 미발견"
+            return "false"
         }
         val address:Address = addresses.get(0);
         var str=""
         if (address.countryCode != "KR"){
             Toast.makeText(context, "국내 주소가 아닙니다.", Toast.LENGTH_LONG).show()
-            return address.countryCode
+            return "false"
         }
         str+=address.getAddressLine(0).toString().split(" ")[1] + " " + address.getAddressLine(0).toString().split(" ")[2]
         return str
@@ -258,13 +260,12 @@ class localFragment : Fragment() {
     private fun addlocal(cspinner1:String,cspinner2:String){
         val saveflag = MyApplication.prefs.savelocal(cspinner1, cspinner2)
         val localrecycle = requireView().findViewById<View>(R.id.local_recycle) as RecyclerView
-        val ladpater = localAdapter(llistItems!!)
         if (saveflag) {
             val list = MyApplication.prefs.getlocal()
             if (list != null) {
                 llistItems!!.add(list[list.size - 1])
-                ladpater.notifyItemInserted(list.size)
-                ladpater.notifyItemRangeChanged(0, list.size)
+                ladpater!!.notifyItemInserted(list.size)
+                ladpater!!.notifyItemRangeChanged(0, list.size)
                 localrecycle.visibility = View.VISIBLE
             }
         } else {
