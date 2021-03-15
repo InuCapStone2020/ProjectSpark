@@ -158,6 +158,7 @@ class localFragment : Fragment() {
                     if (address != "false"){
                         addDialog(address)
                     }
+                    gpsTracker.stopUsingGPS()
                 }
             }
         }
