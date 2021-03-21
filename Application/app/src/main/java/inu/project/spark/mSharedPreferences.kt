@@ -162,7 +162,7 @@ class mSharedPreferences (context: Context){
         return true
     }
     fun deletelocal(index:Int){
-        var temparr:MutableList<String>? = getlocal()
+        val temparr:MutableList<String>? = getlocal()
         if (temparr != null){
             try{
                 temparr.removeAt(index)

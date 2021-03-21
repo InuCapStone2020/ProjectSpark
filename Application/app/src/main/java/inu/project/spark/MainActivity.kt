@@ -2,14 +2,18 @@ package inu.project.spark
 
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Base64
+import android.util.Log
 import android.view.View
-import android.widget.Button
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityCompat
+import java.security.MessageDigest
+import java.security.NoSuchAlgorithmException
 
 
 class MainActivity : AppCompatActivity() {
@@ -23,15 +27,17 @@ class MainActivity : AppCompatActivity() {
                 AlertDialog.Builder(this@MainActivity)
                         .setTitle("close")
                         .setMessage("종료하시겠습니까?")
-                        .setPositiveButton("네", DialogInterface.OnClickListener(){
-                            dialogInterface: DialogInterface, i: Int ->
-                            ActivityCompat.finishAffinity(this@MainActivity)
-                            System.exit(0)
-                        }
+                        .setPositiveButton(
+                            "네",
+                            DialogInterface.OnClickListener() { dialogInterface: DialogInterface, i: Int ->
+                                ActivityCompat.finishAffinity(this@MainActivity)
+                                System.exit(0)
+                            }
                         )
-                        .setNegativeButton("아니오",DialogInterface.OnClickListener(){
-                            dialogInterface: DialogInterface, i: Int ->
-                        })
+                        .setNegativeButton(
+                            "아니오",
+                            DialogInterface.OnClickListener() { dialogInterface: DialogInterface, i: Int ->
+                            })
                         .show()
             }
         }
@@ -47,23 +53,41 @@ class MainActivity : AppCompatActivity() {
         // set goto each layout by button
         button_main_map.setOnClickListener{
             var i = Intent(this, SubActivity::class.java)
-            i.putExtra("fragment",R.id.button_main_map)
+            i.putExtra("fragment", R.id.button_main_map)
             startActivity(i)
         }
         button_main_setting.setOnClickListener{
             var i = Intent(this, SubActivity::class.java)
-            i.putExtra("fragment",R.id.button_main_setting)
+            i.putExtra("fragment", R.id.button_main_setting)
             startActivity(i)
         }
         button_main_repository.setOnClickListener{
             var i = Intent(this, SubActivity::class.java)
-            i.putExtra("fragment",R.id.button_main_repository)
+            i.putExtra("fragment", R.id.button_main_repository)
             startActivity(i)
         }
         button_main_search.setOnClickListener{
             var i = Intent(this, SubActivity::class.java)
-            i.putExtra("fragment",R.id.button_main_search)
+            i.putExtra("fragment", R.id.button_main_search)
             startActivity(i)
+        }
+    }
+    private fun getHashKey() {
+        var packageInfo: PackageInfo? = null
+        try {
+            packageInfo = packageManager.getPackageInfo(packageName, PackageManager.GET_SIGNATURES)
+        } catch (e: PackageManager.NameNotFoundException) {
+            e.printStackTrace()
+        }
+        if (packageInfo == null) Log.e("KeyHash", "KeyHash:null")
+        for (signature in packageInfo!!.signatures) {
+            try {
+                val md: MessageDigest = MessageDigest.getInstance("SHA")
+                md.update(signature.toByteArray())
+                Log.d("KeyHash", Base64.encodeToString(md.digest(), Base64.DEFAULT))
+            } catch (e: NoSuchAlgorithmException) {
+                Log.e("KeyHash", "Unable to get MessageDigest. signature=$signature", e)
+            }
         }
     }
 }

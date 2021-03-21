@@ -158,7 +158,7 @@ class localFragment : Fragment() {
                     if (address != "false"){
                         addDialog(address)
                     }
-                    gpsTracker.stopUsingGPS()
+                    //gpsTracker.stopUsingGPS()
                 }
             }
         }
@@ -175,7 +175,7 @@ class localFragment : Fragment() {
             addresses = geocoder.getFromLocation(
                     latitude,
                     longitude,
-                    7);
+                    7)
         } catch (ioException: IOException) {
             //네트워크 문제
             Toast.makeText(context, "지오코더 서비스 사용불가", Toast.LENGTH_LONG).show()
@@ -188,7 +188,7 @@ class localFragment : Fragment() {
             Toast.makeText(context, "주소 미발견", Toast.LENGTH_LONG).show()
             return "false"
         }
-        val address:Address = addresses.get(0);
+        val address:Address = addresses.get(0)
         var str=""
         if (address.countryCode != "KR"){
             Toast.makeText(context, "국내 주소가 아닙니다.", Toast.LENGTH_LONG).show()
@@ -272,6 +272,5 @@ class localFragment : Fragment() {
         } else {
             Toast.makeText(context, "해당 지역이 저장 되어 있습니다.", Toast.LENGTH_LONG).show()
         }
-
     }
 }
