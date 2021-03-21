@@ -279,6 +279,6 @@ class NaiveBayesClassifier:
             result = ('기타/'+str(etc_class_prob * 100)+'%')
             
         if max_prob < 0.5:
-            result = ('미분류/'+str(max_prob)+'%')
+            result = ('미분류/'+str(max_prob * 100)+'%')
         
         return result
