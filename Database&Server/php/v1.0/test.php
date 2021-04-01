@@ -8,11 +8,14 @@ include('dbcon.php');
 
 //GET 값을 읽어온다.
 $region=isset($_GET['region']) ? $_GET['region'] : '';
+$s_date=isset($_GET['s_date']) ? $_GET['s_date'] : '';
+$e_date=isset($_GET['e_date']) ? $_GET['e_date'] : '';
+$event=isset($_GET['event']) ? $_GET['event'] : '';
 #$android = strpos($_SERVER['HTTP_USER_AGENT'], "Android");
 
-if ($region != "" ){ 
+if (($region != "") && ($s_date != "") && ($e_date != "") && ($event != "")){ 
 
-    $sql="select * from Message_List where region in('$region')";
+    $sql="select * from Message_List where (region in('$region')) and (m_date between '$s_date' and '$e_date') and (event in('$event'))";
     $stmt = $con->prepare($sql);
     $stmt->execute();
  
@@ -41,11 +44,9 @@ if ($region != "" ){
             ));
         }
 
-
         header('Content-Type: application/json; charset=utf8');
         $json = json_encode(array("spark"=>$data), JSON_PRETTY_PRINT+JSON_UNESCAPED_UNICODE);
         echo $json;
-        
     }
 }
 else {
@@ -68,6 +69,21 @@ if (!$android){
    
       <form action="<?php $_PHP_SELF ?>" method="get">
          지역 이름: <input type = "text" name = "region" />
+         <input type = "submit" />
+      </form>
+
+      <form action="<?php $_PHP_SELF ?>" method="get">
+         시작 DATE: <input type = "text" name = "s_date" />
+         <input type = "submit" />
+      </form>
+
+      <form action="<?php $_PHP_SELF ?>" method="get">
+         종료 DATE: <input type = "text" name = "e_date" />
+         <input type = "submit" />
+      </form>
+
+      <form action="<?php $_PHP_SELF ?>" method="get">
+         사건: <input type = "text" name = "evnet" />
          <input type = "submit" />
       </form>
    

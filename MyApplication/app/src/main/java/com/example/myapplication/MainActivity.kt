@@ -14,12 +14,15 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         var text1 = findViewById<TextView>(R.id.text1)
-        var text2 = findViewById<TextView>(R.id.text2)
 
+    }
+    fun btnClick(view: View) {
+        var url = "http://10.0.2.2/selectregionall.php?REGION="
+        var edit1 = findViewById<EditText>(R.id.edit1)
+        var inputtext = edit1.text.toString()
         var text = ""
-        //val url = "http://10.0.2.2/PHP_connection.php"
-        val url = "http://10.0.2.2/selectregionall.php?REGION=인천광역시+남동구"
-        text2.setText(url)
+        url = url + inputtext
+        var text1 = findViewById<TextView>(R.id.text1)
         val client = OkHttpClient()
         val request = Request.Builder().url(url).build()
         client.newCall(request).enqueue(object: Callback{
@@ -34,11 +37,7 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-    }
-    fun btnClick(view: View) {
-        var edit1 = findViewById<EditText>(R.id.edit1)
-        var inputtext = edit1.text.toString()
-        Toast.makeText(this, inputtext, Toast.LENGTH_SHORT).show()
+
     }
 
 
