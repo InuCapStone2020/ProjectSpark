@@ -11,7 +11,9 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.get
 import androidx.fragment.app.Fragment
+import net.daum.mf.map.api.MapPOIItem
 import net.daum.mf.map.api.MapPoint
 import net.daum.mf.map.api.MapView
 
@@ -31,14 +33,16 @@ class mapFragment : Fragment(),MapView.CurrentLocationEventListener,MapView.MapV
     private val GPS_ENABLE_REQUEST_CODE = 2001
     private val PERMISSIONS_REQUEST_CODE = 100
     private var displayFlag = false
+    private var markerFlag = false
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         val mapView = MapView(activity)
         mapViewContainer = requireView().findViewById<View>(R.id.map_view) as ViewGroup
         mapViewContainer.addView(mapView)
         val nowmapbutton = requireView().findViewById<View>(R.id.map_now_button)
+        mapView.setMapViewEventListener(this)
         nowmapbutton.setOnClickListener{
-            mapView.setMapViewEventListener(this)
+            // service and permission check function
             if(!checkLocationServicesStatus()){
                 //showDialogForLocationSetting()
             }
@@ -48,6 +52,7 @@ class mapFragment : Fragment(),MapView.CurrentLocationEventListener,MapView.MapV
                     val latitude: Double = gpsTracker.getLatitude()
                     val longitude: Double = gpsTracker.getLongitude()
                     mapView.setMapCenterPoint(MapPoint.mapPointWithGeoCoord(latitude, longitude), true)
+                    Toast.makeText(context, "현재위치 이동 완료",Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -66,20 +71,40 @@ class mapFragment : Fragment(),MapView.CurrentLocationEventListener,MapView.MapV
             displayFlag = !displayFlag
         }
         val searchmapbutton = requireView().findViewById<View>(R.id.search_map_button)
+        val nextmapbutton = requireView().findViewById<View>(R.id.next_map_button)
+        val localsearchbutton = requireView().findViewById<View>(R.id.localsearch_map_button)
         searchmapbutton.setOnClickListener{
-            // invisible button
+            // inactive button
             viewmapbutton.visibility = View.INVISIBLE
             searchmapbutton.visibility = View.INVISIBLE
+            // if displayflag is true then inactive this function
             // active button
-            val nextmapbutton = requireView().findViewById<View>(R.id.next_map_button)
-            val localsearchbutton = requireView().findViewById<View>(R.id.localsearch_map_button)
+            markerFlag = true
             requireView().findViewById<View>(R.id.search_map_text).visibility = View.VISIBLE
             nextmapbutton.visibility = View.VISIBLE
             localsearchbutton.visibility = View.VISIBLE
+            // active function
+            val marker1 = MapPOIItem()
+            marker1.itemName = ""
+            marker1.tag = 1
+            marker1.mapPoint = mapView.mapCenterPoint
+            marker1.markerType = MapPOIItem.MarkerType.BluePin
+            marker1.isDraggable = true
+            mapView.addPOIItem(marker1)
+        }
+        nextmapbutton.setOnClickListener{
+            // inactive button
+            markerFlag = false
+            requireView().findViewById<View>(R.id.search_map_text).visibility = View.INVISIBLE
+            nextmapbutton.visibility = View.INVISIBLE
+            localsearchbutton.visibility = View.INVISIBLE
+            // active button, function
 
 
         }
+
     }
+
     fun checkRunTimePermission():Boolean{
         val hasFineLocationPermission:Int = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
         val hasCoarseLocationPermission:Int = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION)
@@ -99,12 +124,11 @@ class mapFragment : Fragment(),MapView.CurrentLocationEventListener,MapView.MapV
         }
         return false
     }
-    override fun onDestroy() {
-        super.onDestroy()
+
+    override fun onStop() {
+        super.onStop()
         mapViewContainer.removeAllViews()
-
     }
-
     fun checkLocationServicesStatus():Boolean {
         val locationManager: LocationManager = requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
@@ -112,7 +136,6 @@ class mapFragment : Fragment(),MapView.CurrentLocationEventListener,MapView.MapV
 
     // overriding MapView.CurrentLocationEventListener
     override fun onCurrentLocationUpdate(p0: MapView?, p1: MapPoint?, p2: Float) {
-        var mapPointGeo = p1!!.getMapPointGeoCoord()
     }
 
     override fun onCurrentLocationDeviceHeadingUpdate(p0: MapView?, p1: Float) {
@@ -141,7 +164,23 @@ class mapFragment : Fragment(),MapView.CurrentLocationEventListener,MapView.MapV
     }
 
     override fun onMapViewSingleTapped(p0: MapView?, p1: MapPoint?) {
-
+        if (markerFlag){
+            val mapview = mapViewContainer.get(0) as MapView
+            val poi = mapview.findPOIItemByTag(1)
+            if (poi == null)
+            {
+                val marker1 = MapPOIItem()
+                marker1.itemName = ""
+                marker1.tag = 1
+                marker1.mapPoint = mapview.mapCenterPoint
+                marker1.markerType = MapPOIItem.MarkerType.BluePin
+                marker1.isDraggable = true
+                mapview.addPOIItem(marker1)
+            }
+            else{
+                poi.mapPoint = p1
+            }
+        }
     }
 
     override fun onMapViewDoubleTapped(p0: MapView?, p1: MapPoint?) {

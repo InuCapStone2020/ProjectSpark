@@ -74,4 +74,23 @@
         android:textColor="@color/black"
         android:textSize="18sp"
         android:visibility="invisible" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/borderline"
+        android:padding="4dp"
+        android:text="리스트 v"
+        android:textSize="18sp"
+        android:visibility="invisible" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/locallist"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="48dp"
+        android:visibility="invisible" />
 </FrameLayout>
