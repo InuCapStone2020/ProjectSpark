@@ -100,7 +100,6 @@ class mapFragment : Fragment(),MapView.CurrentLocationEventListener,MapView.MapV
             localsearchbutton.visibility = View.INVISIBLE
             // active button, function
 
-
         }
 
     }
