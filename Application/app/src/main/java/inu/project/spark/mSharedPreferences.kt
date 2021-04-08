@@ -103,6 +103,7 @@ class mSharedPreferences (context: Context){
             }
         }
     }
+    // local alarm data
     fun getlocal():MutableList<String>?{
         val strjson = prefs.getString(localkey,null)
         var locallist:MutableList<String>? = null
@@ -124,6 +125,7 @@ class mSharedPreferences (context: Context){
                 e.printStackTrace()
             }
         }
+        //return jsonObject's mutable list
         return locallist
     }
     fun savelocal(local_first:String,local_second:String):Boolean{

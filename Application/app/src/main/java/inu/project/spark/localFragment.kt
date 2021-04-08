@@ -32,6 +32,7 @@ class localFragment : Fragment() {
             inflater: LayoutInflater, container: ViewGroup?,
             savedInstanceState: Bundle?
     ): View? {
+        //NavigationToolbar resetting
         val fragmentSetting: settingFragment = settingFragment()
         val mtoolbar = (activity as SubActivity).findViewById<View>(R.id.toolbar_sub) as Toolbar
         mtoolbar.setNavigationOnClickListener {
@@ -41,15 +42,18 @@ class localFragment : Fragment() {
         }
         return inflater.inflate(R.layout.local_fragment, container, false)
     }
+
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+        //llistItems = get saved local alarm data
         llistItems = MyApplication.prefs.getlocal()
-
+        // initializing recyclerview
         val localrecycle = requireView().findViewById<View>(R.id.local_recycle) as RecyclerView
         if (llistItems == null) {
             llistItems = mutableListOf<String>()
             localrecycle.visibility = View.GONE
         }
+
         val layoutManager = LinearLayoutManager(context)
         localrecycle.layoutManager = layoutManager
         localrecycle.setHasFixedSize(false)
