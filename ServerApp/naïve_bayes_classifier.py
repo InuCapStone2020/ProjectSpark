@@ -4,14 +4,9 @@ from tqdm.notebook import tqdm
 from konlpy.tag import Komoran
 import re
 
-#-----------------------------------------------------------------------
-positiveword=[]
-negativeword=[]
-etcword=[]
-#테스트용 리스트
-#-----------------------------------------------------------------------
+
 class NaiveBayesClassifier:
-    def __init__(self, k=0.5, c = False):
+    def __init__(self, c, k=0.5):
         self.k = k 
         self.word_probs = []
         self.komoran = Komoran()
@@ -67,6 +62,7 @@ class NaiveBayesClassifier:
             elif label == '2': label = '전염병'
             elif label == '3': label = '기타'
             labels.append(label)
+        print("initial data added")
         return docs, labels
         
         #분류 완료된 파일을 불러와 docs, labels에 저장
@@ -77,7 +73,7 @@ class NaiveBayesClassifier:
         
         if self.clear == True:
             docs, labels = self.load_initial_data()
-        
+            
         for i in data_list:
             if i['EVENT'] == '미분류':
                 continue
@@ -167,7 +163,7 @@ class NaiveBayesClassifier:
             
             #각 계산 결과를 튜플 형태로 묶어 리턴
             
-        file=open('word_prob_list.txt','w+', encoding='utf8')
+        file=open('word_prob_list.txt','w', encoding='utf8')
         if len(word_prob_list) != 0:
             for i in word_prob_list:
                 line = i[0] + '/' + str(i[1]) + '/' + str(i[2]) + '/' + str(i[3]) + '\n'
@@ -229,17 +225,14 @@ class NaiveBayesClassifier:
         #파일에서 데이터를 불러와 label, doc에 저장
     
     def write_file_data(self, docs, labels):
-        mode = 'a+'
-        if self.clear == True:
-            mode = 'w+'
+        mode = 'w'
         file=open('trained_data.txt',mode, encoding='utf8')
         for i in range(len(docs)):
             line = labels[i] + '###' + docs[i] + '***'
-            #file.write(line)
+            file.write(line)
         file.close()
         
         #파일에 데이터를 저장
-        #clear가 false면 추가, true면 새로 씀
         
     def train(self, data_list):
         

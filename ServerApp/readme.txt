@@ -18,3 +18,6 @@ trained_data.txt
 
 word_prob_list.txt
 빠른 분류를 위한 단어 확률 정보가 저장된 데이터
+
+config.ini
+웹 크롤러의 설정값을 저장하고 있는 파일
