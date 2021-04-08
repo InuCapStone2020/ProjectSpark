@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.View
 import android.widget.EditText
 import android.widget.TextView
-import android.widget.Toast
 import okhttp3.*
 import java.io.IOException
 
@@ -17,7 +16,7 @@ class MainActivity : AppCompatActivity() {
 
     }
     fun btnClick(view: View) {
-        var url = "http://10.0.2.2/selectregionall.php?REGION="
+        var url = "http://54.147.58.83/selectregionall.php?region="
         var edit1 = findViewById<EditText>(R.id.edit1)
         var inputtext = edit1.text.toString()
         var text = ""
@@ -32,7 +31,6 @@ class MainActivity : AppCompatActivity() {
             }
             override fun onResponse(call: Call, response: Response) {
                 text= response?.body?.string().toString()
-                println(text)
                 runOnUiThread(Runnable { text1.setText(text) })
             }
         })
