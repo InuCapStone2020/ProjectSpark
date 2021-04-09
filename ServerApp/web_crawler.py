@@ -2,47 +2,53 @@ from selenium import webdriver
 import time
 import pymysql
 import naïve_bayes_classifier as NBC
-#--------------글로벌 변수--------------
-
-#chromedriver 파일 위치
-target="C:\\Users\\podoCU\\Exercises\\chromedriver.exe"
-
-#국민재난안전포털 재난문자 url
-main_url = "https://www.safekorea.go.kr/idsiSFK/neo/sfk/cs/sfc/dis/disasterMsgList.jsp?menuSeq=679"
-
-#한 사이클 돌리는 대기 시간
-sleep_time = 0.1
-
-#데이터베이스 접속용 변수
-user=''
-passwd=''
-host=''
-db=''
-charset=''
+import configparser
 
 class WebCrawler:
     def __init__(self, c = False):
-        self.number=0
-        self.main_db = pymysql.connect(user=user,passwd=passwd,host=host,db=db,charset=charset)
         self.classifier = NBC.NaiveBayesClassifier(c)
         self.clear = c
+        
+        self.config = configparser.ConfigParser()
+        self.config.read('config.ini',encoding='utf8')
+        
+        self.target = self.config['program']['target']
+        self.main_url = self.config['program']['main_url']
+        self.sleep_time = float(self.config['program']['sleep_time'])
+        self.number = int(self.config['program']['number'])
+        user = self.config['DB']['user']
+        passwd = self.config['DB']['passwd']
+        host = self.config['DB']['host']
+        db = self.config['DB']['db']
+        charset = self.config['DB']['charset']
+        self.main_db = pymysql.connect(user=user,passwd=passwd,host=host,db=db,charset=charset)
+        
         #user유저네임/passwd비밀번호/host호스트/db데이터베이스명/charset인코딩
     def load_number(self):
-        #----DB에서 가장 최근 데이터 불러오기----
-        try:
-            #검색결과를 딕셔너리 형태로 반환
-            cursor=self.main_db.cursor(pymysql.cursors.DictCursor)
+        #----DB에서 가장 최근 데이터 번호 불러오기----
+        #try:
+        #검색결과를 딕셔너리 형태로 반환
+        cursor=self.main_db.cursor(pymysql.cursors.DictCursor)
 
-            #검색할 명령어
-            sql = "SELECT MAX(NUM) FROM Message_List;"
-            cursor.execute(sql)
-            result=cursor.fetchall()
-            self.number=result[0]['MAX(NUM)']
-            #불러온 것 중 가장 최근 데이터의 고유번호
-            if self.number==None:
-                self.number=95800
-        except:    
-            self.number=95800
+        #검색할 명령어
+        sql = "SELECT MAX(NUM) FROM Message_List;"
+        cursor.execute(sql)
+        result=cursor.fetchall()
+        number=result[0]['MAX(NUM)']
+        #불러온 것 중 가장 최근 데이터의 고유번호
+
+        if self.number!=None:
+            if self.number != number:
+                print("DB - config number incorrect")
+                print("DB = ",number," config = ",self.number)
+
+            self.number=number
+            self.config['program']['number'] = str(number)
+            with open('config.ini','wt',encoding='utf8') as conf_file:
+                self.config.write(conf_file)
+                    
+        #except:
+            #print("DB connect error")
             
     def load_db_data(self):
         cursor=self.main_db.cursor(pymysql.cursors.DictCursor)
@@ -70,10 +76,10 @@ class WebCrawler:
         options.add_argument("disable-gpu")
 
         #크롬 백그라운드로 실행
-        driver = webdriver.Chrome(target,options=options)
+        driver = webdriver.Chrome(self.target,options=options)
 
         #해당 홈페이지 실행
-        driver.get(main_url)
+        driver.get(self.main_url)
 
         #DB의 가장 최근 데이터 번호
         number=str(self.number)
@@ -90,7 +96,7 @@ class WebCrawler:
             #해당 번호로 접속하기 위한 jsp 명령어
             label2="bbsDtl('63','"+number+"');"
             #해당 페이지 접속
-            driver.get(main_url)
+            driver.get(self.main_url)
             driver.execute_script(label2)
 
             #다음 페이지, 이전 페이지의 텍스트
@@ -100,7 +106,7 @@ class WebCrawler:
             #텍스트가 같으면 둘다 "데이터가 없습니다"이므로 재시도, +1이 되므로 다시 -1
             if(temp1 == temp2 and flag==False):
                 flag=True
-                time.sleep(sleep_time)
+                time.sleep(self.sleep_time)
                 number=str(int(number)-1)
                 continue
 
@@ -112,7 +118,7 @@ class WebCrawler:
                     driver.quit()
                     break
                 flag=False
-                time.sleep(sleep_time)
+                time.sleep(self.sleep_time)
                 continue
 
             #위 구간을 넘어가면 있는 것이므로 변수 초기화
@@ -142,13 +148,14 @@ class WebCrawler:
                 if(temp != ''):
                     text_place.append(temp)
 
-            time.sleep(sleep_time)
+            time.sleep(self.sleep_time)
 
             #---------데이터 변환 모듈---------
             for i in range(len(text_place)):
                 data_message = {"num":int(number),"sub_num":i,"date":date_date,"time":date_time,"place":text_place[i],"text":text_text}
                 data_message_all.append(data_message)
-        return data_message_all   
+        return data_message_all
+    
     def webcrawl(self):
         self.load_number()
         data_message_all = self.crawl_data()
@@ -182,5 +189,5 @@ class WebCrawler:
         self.classifier.train(data_list)
         print("train finished")
 
-crawler = WebCrawler(False)
+crawler = WebCrawler(True)
 crawler.webcrawl()
