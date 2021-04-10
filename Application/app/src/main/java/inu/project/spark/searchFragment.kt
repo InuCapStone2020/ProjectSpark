@@ -267,30 +267,57 @@ class searchFragment : Fragment() {
             }
         }
         eventbutton.setOnClickListener{
+            val builder = Dialog(requireContext())
+            builder.setContentView(R.layout.search_event_dialog)
+            builder.show()
+            val chkall = builder.findViewById<View>(R.id.search_event_chkall) as CheckBox
+            val chk1 = builder.findViewById<View>(R.id.search_event_chk1) as CheckBox
+            val chk2 = builder.findViewById<View>(R.id.search_event_chk2) as CheckBox
+            val chk3 = builder.findViewById<View>(R.id.search_event_chk3) as CheckBox
+            //checkbox1~3이 false 로 교체시 추가
+            chkall.setOnCheckedChangeListener { buttonView, isChecked ->
+                if(isChecked){
+                    chk1.isChecked = true
+                    chk2.isChecked = true
+                    chk3.isChecked = true
+                }
+                else{
+                    chk1.isChecked = false
+                    chk2.isChecked = false
+                    chk3.isChecked = false
+                }
+            }
 
+            chk1.setOnCheckedChangeListener { buttonView, isChecked ->
+                if(!isChecked){
+                    chkall.isChecked = false
+                }
+                else{
+                    if(chk2.isChecked && chk3.isChecked){
+                        chkall.isChecked = true
+                    }
+                }
+            }
+            chk2.setOnCheckedChangeListener { buttonView, isChecked ->
+                if(!isChecked){
+                    chkall.isChecked = false
+                }
+                else{
+                    if(chk1.isChecked && chk3.isChecked){
+                        chkall.isChecked = true
+                    }
+                }
+            }
+            chk3.setOnCheckedChangeListener { buttonView, isChecked ->
+                if(!isChecked){
+                    chkall.isChecked = false
+                }
+                else{
+                    if(chk2.isChecked && chk1.isChecked){
+                        chkall.isChecked = true
+                    }
+                }
+            }
         }
     }
-    /*
-
-    fun btnClick(view: View) {
-        val url = "http://54.147.58.83/selectregionall.php?region="
-        var edit1 = findViewById<EditText>(R.id.edit1)
-        var inputtext = edit1.text.toString()
-        var text = ""
-        url = url + inputtext
-        var text1 = findViewById<TextView>(R.id.text1)
-        val client = OkHttpClient()
-        val request = Request.Builder().url(url).build()
-        client.newCall(request).enqueue(object: Callback{
-            override fun onFailure(call: Call, e: IOException) {
-                text="connection failed"
-                runOnUiThread(Runnable { text1.setText(text) })
-            }
-            override fun onResponse(call: Call, response: Response) {
-                text= response?.body?.string().toString()
-                runOnUiThread(Runnable { text1.setText(text) })
-            }
-        })
-    }
-    */
 }
