@@ -82,7 +82,7 @@ class searchFragment : Fragment() {
                 var datestring: String = ""
                 val dateListener = object : DatePickerDialog.OnDateSetListener {
                     override fun onDateSet(view: DatePicker?, year: Int, month: Int, dayOfMonth: Int) {
-                        datestring = "${year}-${String.format("%02d",month)}-${String.format("%02d",dayOfMonth)}"
+                        datestring = "${year}-${String.format("%02d",month+1)}-${String.format("%02d",dayOfMonth)}"
                         v.text = datestring
                     }
                 }
@@ -96,7 +96,7 @@ class searchFragment : Fragment() {
                 val temp = JSONObject(minstr).get("mindate").toString()
                 val a = temp.split("-")
                 val b = Calendar.getInstance()
-                b.set(a[0].toInt(),a[1].toInt(),a[2].toInt())
+                b.set(a[0].toInt(),a[1].toInt()-1,a[2].toInt())
                 if (end.text.toString() == ""){
                     l(start,b.timeInMillis,time.timeInMillis)
                 }
@@ -104,7 +104,7 @@ class searchFragment : Fragment() {
                     val temp2 = end.text.toString()
                     val a2 = temp2.split("-")
                     val b2 = Calendar.getInstance()
-                    b2.set(a2[0].toInt(),a2[1].toInt(),a2[2].toInt())
+                    b2.set(a2[0].toInt(),a2[1].toInt()-1,a2[2].toInt())
                     l(start,b.timeInMillis,b2.timeInMillis)
                 }
             }
@@ -113,15 +113,15 @@ class searchFragment : Fragment() {
                     val temp = JSONObject(minstr).get("mindate").toString()
                     val a = temp.split("-")
                     val b = Calendar.getInstance()
-                    b.set(a[0].toInt(),a[1].toInt(),a[2].toInt())
+                    b.set(a[0].toInt(),a[1].toInt()-1,a[2].toInt())
                     l(end,b.timeInMillis,time.timeInMillis)
                 }
                 else{
                     val temp2 = start.text.toString()
                     val a2 = temp2.split("-")
                     val b2 = Calendar.getInstance()
-                    b2.set(a2[0].toInt(),a2[1].toInt(),a2[2].toInt())
-                    l(start,b2.timeInMillis,time.timeInMillis)
+                    b2.set(a2[0].toInt(),a2[1].toInt()-1,a2[2].toInt())
+                    l(end,b2.timeInMillis,time.timeInMillis)
                 }
             }
             val add = builder.findViewById<View>(R.id.searchdatedialog_ok_button)
