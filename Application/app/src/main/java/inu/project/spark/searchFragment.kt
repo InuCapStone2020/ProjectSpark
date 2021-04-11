@@ -266,6 +266,7 @@ class searchFragment : Fragment() {
                 builder.dismiss()
             }
         }
+        val eventlist:MutableList<String> = mutableListOf()
         eventbutton.setOnClickListener{
             val builder = Dialog(requireContext())
             builder.setContentView(R.layout.search_event_dialog)
@@ -274,9 +275,27 @@ class searchFragment : Fragment() {
             val chk1 = builder.findViewById<View>(R.id.search_event_chk1) as CheckBox
             val chk2 = builder.findViewById<View>(R.id.search_event_chk2) as CheckBox
             val chk3 = builder.findViewById<View>(R.id.search_event_chk3) as CheckBox
-            //checkbox1~3이 false 로 교체시 추가
-            chkall.setOnCheckedChangeListener { buttonView, isChecked ->
-                if(isChecked){
+            if (eventlist.size == 3){
+                chkall.isChecked = true
+                chk1.isChecked = true
+                chk2.isChecked = true
+                chk3.isChecked = true
+            }
+            else{
+                for (a in eventlist){
+                    if (a == chk1.text.toString()){
+                        chk1.isChecked = true
+                    }
+                    else if (a == chk2.text.toString()){
+                        chk2.isChecked = true
+                    }
+                    else if (a == chk3.text.toString()){
+                        chk3.isChecked = true
+                    }
+                }
+            }
+            chkall.setOnClickListener{
+                if(chkall.isChecked){
                     chk1.isChecked = true
                     chk2.isChecked = true
                     chk3.isChecked = true
@@ -318,6 +337,26 @@ class searchFragment : Fragment() {
                     }
                 }
             }
+            val cancle = builder.findViewById<View>(R.id.search_event_cancle)
+            val ok = builder.findViewById<View>(R.id.search_event_ok)
+            cancle.setOnClickListener{
+                builder.dismiss()
+            }
+
+            ok.setOnClickListener{
+                eventlist.clear()
+                if(chk1.isChecked){
+                    eventlist.add(chk1.text.toString())
+                }
+                if(chk2.isChecked){
+                    eventlist.add(chk2.text.toString())
+                }
+                if(chk3.isChecked){
+                    eventlist.add(chk3.text.toString())
+                }
+                builder.dismiss()
+            }
         }
+        // 검색 php 접속 추가
     }
 }
