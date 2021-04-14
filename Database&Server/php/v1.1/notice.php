@@ -5,7 +5,10 @@ ini_set('display_errors',1);
 include('dbcon.php');
 
 $region=isset($_GET['region']) ? $_GET['region'] : '';
-$num=isset($_GET['num']) ? $_GET['num'] : '';
+if($region == "") {
+    $region = '전체 전체';
+}
+#$num=isset($_GET['num']) ? $_GET['num'] : '';
 #$android = strpos($_SERVER['HTTP_USER_AGENT'], "Android");
 
 
@@ -28,10 +31,10 @@ if($region != "전체 전체") {
     $mergeRegion = implode("|", $splitRegion);
     $region = $mergeRegion;
     
-    $sql="select * from Message_List where (region REGEXP '$region') and (num > $num)";
+    $sql="select num, subnum, m_date, m_time, region, content, event from (select *, concat(m_date,' ', m_time) as m_dt from Message_List) as ml_dt where (ml_dt.m_dt > DATE_SUB(now(),INTERVAL 1 hour)) and (region REGEXP '$region')";
 }
 else {
-    $sql="select * from Message_List where num > $num";
+    $sql="select num, subnum, m_date, m_time, region, content, event from (select *, concat(m_date,' ', m_time) as m_dt from Message_List) as ml_dt where ml_dt.m_dt > DATE_SUB(now(),INTERVAL 1 hour)";
 }
 
 $stmt = $con->prepare($sql);
