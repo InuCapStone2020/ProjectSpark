@@ -16,9 +16,13 @@ import androidx.fragment.app.Fragment
 import net.daum.mf.map.api.MapPOIItem
 import net.daum.mf.map.api.MapPoint
 import net.daum.mf.map.api.MapView
+import okhttp3.*
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.IOException
 
 
-class mapFragment : Fragment(),MapView.CurrentLocationEventListener,MapView.MapViewEventListener {
+class mapFragment : Fragment(),MapView.MapViewEventListener {
     override fun onCreateView(
             inflater: LayoutInflater, container: ViewGroup?,
             savedInstanceState: Bundle?
@@ -34,6 +38,7 @@ class mapFragment : Fragment(),MapView.CurrentLocationEventListener,MapView.MapV
     private val PERMISSIONS_REQUEST_CODE = 100
     private var displayFlag = false
     private var markerFlag = false
+    private val localhash = hashMapOf<String,Int>()
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         val mapView = MapView(activity)
@@ -41,6 +46,7 @@ class mapFragment : Fragment(),MapView.CurrentLocationEventListener,MapView.MapV
         mapViewContainer.addView(mapView)
         val nowmapbutton = requireView().findViewById<View>(R.id.map_now_button)
         mapView.setMapViewEventListener(this)
+
         nowmapbutton.setOnClickListener{
             // service and permission check function
             if(!checkLocationServicesStatus()){
@@ -60,13 +66,25 @@ class mapFragment : Fragment(),MapView.CurrentLocationEventListener,MapView.MapV
         viewmapbutton.setOnClickListener{
             // if displayFlag is False then
             if(!displayFlag){
-                //send query that number of message each city to server
+                //send request that number of message each city to server
                 // if receive json that number of message each city then ping on the map
+                localhash_init()
+                val url = "http://54.147.58.83/weekcount.php"
+                val client = OkHttpClient()
+                val request = Request.Builder().url(url).build()
+                client.newCall(request).enqueue(object: Callback {
+                    override fun onFailure(call: Call, e: IOException) {
+                        Toast.makeText(requireContext(),"connection failed",Toast.LENGTH_SHORT).show()
+                    }
+                    override fun onResponse(call: Call, response: Response) {
+                        localhash_update(response.body?.string().toString())
+                        // use localhash ping all of the map
+                    }
+                })
             }
             // if displayFlag is True then
             else{
                 // delete all of ping on the map
-
             }
             displayFlag = !displayFlag
         }
@@ -132,23 +150,81 @@ class mapFragment : Fragment(),MapView.CurrentLocationEventListener,MapView.MapV
         val locationManager: LocationManager = requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
     }
-
-    // overriding MapView.CurrentLocationEventListener
-    override fun onCurrentLocationUpdate(p0: MapView?, p1: MapPoint?, p2: Float) {
+    // localhash function
+    fun localhash_init(){
+        localhash.clear()
+        val localarray1 = resources.getStringArray(R.array.local_do)
+        for (local1 in localarray1){
+            var localarray2:Array<String>
+            when (local1) {
+                "서울특별시" -> {
+                    localarray2 = resources.getStringArray(R.array.local_do_seoul)
+                }
+                "부산광역시" -> {
+                    localarray2 = resources.getStringArray(R.array.local_do_busan)
+                }
+                "대구광역시" -> {
+                    localarray2 = resources.getStringArray(R.array.local_do_busan)
+                }
+                "인천광역시" -> {
+                    localarray2 = resources.getStringArray(R.array.local_do_incheon)
+                }
+                "광주광역시" -> {
+                    localarray2 = resources.getStringArray(R.array.local_do_gwangju)
+                }
+                "대전광역시" -> {
+                    localarray2 = resources.getStringArray(R.array.local_do_daejeon)
+                }
+                "울산광역시" -> {
+                    localarray2 = resources.getStringArray(R.array.local_do_ulsan)
+                }
+                "경기도" -> {
+                    localarray2 = resources.getStringArray(R.array.local_do_gyeonggido)
+                }
+                "강원도" -> {
+                    localarray2 = resources.getStringArray(R.array.local_do_gangwondo)
+                }
+                "충청북도" -> {
+                    localarray2 = resources.getStringArray(R.array.local_do_chungcheongbukdo)
+                }
+                "충청남도" -> {
+                    localarray2 = resources.getStringArray(R.array.local_do_chungcheongnamdo)
+                }
+                "전라북도" -> {
+                    localarray2 = resources.getStringArray(R.array.local_do_jeonlabukdo)
+                }
+                "전라남도" -> {
+                    localarray2 = resources.getStringArray(R.array.local_do_jeonlanamdo)
+                }
+                "경상북도" -> {
+                    localarray2 = resources.getStringArray(R.array.local_do_gyeongsangbukdo)
+                }
+                "경상남도" -> {
+                    localarray2 = resources.getStringArray(R.array.local_do_gyeongsangnamdo)
+                }
+                "제주특별자치도" -> {
+                    localarray2 = resources.getStringArray(R.array.local_do_jejudo)
+                }
+                else -> {
+                    localarray2 = resources.getStringArray(R.array.local_do_all)
+                }
+            }
+            for (local2 in localarray2){
+                localhash[local1 + " " + local2] = 0
+            }
+        }
     }
-
-    override fun onCurrentLocationDeviceHeadingUpdate(p0: MapView?, p1: Float) {
-
+    fun localhash_update(strjson:String){
+        val jobj = JSONObject(strjson)
+        val jarr = jobj.getJSONArray("spark")
+        val s = jarr.length()
+        for (i in 0..s-1){
+            val tempobj = jarr.getJSONObject(i)
+            val value:Int = tempobj.getInt("count")
+            val key = tempobj.getString("region")
+            localhash[key] = value
+        }
     }
-
-    override fun onCurrentLocationUpdateFailed(p0: MapView?) {
-
-    }
-
-    override fun onCurrentLocationUpdateCancelled(p0: MapView?) {
-
-    }
-
     // overriding MapView.MapViewEventListener
     override fun onMapViewInitialized(p0: MapView?) {
 

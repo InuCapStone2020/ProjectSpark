@@ -70,7 +70,7 @@ class localFragment : Fragment() {
             val localspinner1: Spinner = builder.findViewById(R.id.local_spinner1) as Spinner
             val localspinner2: Spinner = builder.findViewById(R.id.local_spinner2) as Spinner
             val localarray1 = resources.getStringArray(R.array.local_do)
-            adspinner1 = ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_dropdown_item, localarray1);
+            adspinner1 = ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_dropdown_item, localarray1)
             localspinner1.adapter = adspinner1
             localspinner1.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {

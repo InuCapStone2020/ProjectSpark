@@ -63,7 +63,6 @@ class searchFragment : Fragment() {
             }
 
             while(true) {
-
                 if (minstr != "start") {
                     break
                 }
@@ -231,7 +230,7 @@ class searchFragment : Fragment() {
                         Toast.makeText(context,"이미 있는 지역입니다.",Toast.LENGTH_SHORT).show()
                         localbuilder.dismiss()
                     }
-                    else if (cspinner1 + "전체" in locallist){
+                    else if (cspinner1 + " 전체" in locallist){
                         Toast.makeText(context,"해당지역이 포함되어 있습니다.",Toast.LENGTH_SHORT).show()
                         localbuilder.dismiss()
                     }
@@ -239,11 +238,20 @@ class searchFragment : Fragment() {
                         Toast.makeText(context,"모든지역이 포함되어 있습니다.",Toast.LENGTH_SHORT).show()
                         localbuilder.dismiss()
                     }
+                    else if (cspinner1 == "전체"){
+                        locallist.clear()
+                        locallist.add(totalstr)
+                        localadapter.notifyDataSetChanged()
+                        localbuilder.dismiss()
+                    }
                     else if (cspinner2 == "전체"){
-                        for (t in locallist){
-                            if (cspinner1 == t.split(" ")[0]){
-                                locallist.remove(t)
+                        var t=0
+                        while (t < locallist.size){
+                            if (cspinner1 == locallist[t].split(" ")[0]){
+                                locallist.removeAt(t)
+                                t--
                             }
+                            t++
                         }
                         Toast.makeText(requireContext(),"${cspinner1}의 지역이 전체설정으로 바뀌었습니다.",Toast.LENGTH_SHORT).show()
                         locallist.add(totalstr)
