@@ -36,7 +36,7 @@ app.post("/messageinsert", (req, res) => {
     var i = 0;
     while (i < number) {
         num.push(req.body.data[i].NUM);
-        subNum.push(req.body.data[i].SUB_NUM);
+        subNum.push(req.body.data[i].SUBNUM);
         date.push(req.body.data[i].M_DATE);
         time.push(req.body.data[i].M_TIME);
         region.push(req.body.data[i].REGION);
