@@ -52,9 +52,9 @@ class WebCrawler:
             
     def load_db_data(self):
         cursor=self.main_db.cursor(pymysql.cursors.DictCursor)
-        sql="SELECT * FROM Message_List"
-        if self.clear == False:            
-            sql +=" WHERE NUM > "+str(self.number)
+        sql="SELECT * FROM Message_List WHERE SUBNUM = 0"
+        if self.clear == False:
+            sql +=" AND NUM > "+str(self.number)
         sql += ";"
         cursor.execute(sql)
         data=[]
