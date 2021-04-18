@@ -13,7 +13,7 @@ app.listen(3000, () => {
 
 //interlock to mysql
 var connection = mysql.createConnection({
-    host: "sparkdb.cm69yl9n1hcy.us-east-1.rds.amazonaws.com", //end point address
+    host: "sparkdb.cs6bwutyplia.us-east-1.rds.amazonaws.com", //end point address
     user: "spark", //masteruser id
     database: "spark", //database to access
     password: "#spark16", //database pw
@@ -60,12 +60,12 @@ app.post("/messageinsert", (req, res) => {
             } else {
                 ret = "Insert Successful";
             }
+            res.json({
+                message: ret
+            });
         });
         j++;
     }
-    res.json({
-        message: ret
-    });
 });
 
 app.get("/search", (req, res) => {
