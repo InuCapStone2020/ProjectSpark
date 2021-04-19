@@ -3,8 +3,10 @@ package inu.project.spark
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.location.Geocoder
 import android.location.LocationManager
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,11 +17,15 @@ import androidx.core.view.get
 import androidx.fragment.app.Fragment
 import net.daum.mf.map.api.MapPOIItem
 import net.daum.mf.map.api.MapPoint
+import net.daum.mf.map.api.MapReverseGeoCoder
 import net.daum.mf.map.api.MapView
 import okhttp3.*
 import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
+import java.lang.Exception
+import java.util.*
 
 
 class mapFragment : Fragment(),MapView.MapViewEventListener {
@@ -38,7 +44,7 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
     private val PERMISSIONS_REQUEST_CODE = 100
     private var displayFlag = false
     private var markerFlag = false
-    private val localhash = hashMapOf<String,Int>()
+    private val localhash = hashMapOf<String,Triple<Int,Double,Double>>()
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         val mapView = MapView(activity)
@@ -79,6 +85,34 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
                     override fun onResponse(call: Call, response: Response) {
                         localhash_update(response.body?.string().toString())
                         // use localhash ping all of the map
+                        try{
+                            val poiarr = mutableListOf<MapPOIItem>()
+                            for (l in localhash){
+                                val marker0 = MapPOIItem()
+                                val point:MapPoint
+                                marker0.itemName = l.key + " : " + l.value.first.toString() + "건"
+                                marker0.tag = 0
+                                marker0.markerType = MapPOIItem.MarkerType.RedPin
+                                val tempstr = l.key.split(" ")
+                                if (tempstr[0] == "전체"){
+                                    continue
+                                }
+                                else if (tempstr[1] == "전체"){
+                                    point = MapPoint.mapPointWithGeoCoord(l.value.second,l.value.third)
+                                    marker0.mapPoint = point
+                                    poiarr.add(marker0)
+                                }
+                                else{
+                                    point = MapPoint.mapPointWithGeoCoord(l.value.second,l.value.third)
+                                    marker0.mapPoint = point
+                                    poiarr.add(marker0)
+                                }
+                            }
+                            mapView.addPOIItems(poiarr.toTypedArray())
+                        }catch(e:IOException){
+                            e.printStackTrace()
+                            Toast.makeText(requireContext(),"error",Toast.LENGTH_SHORT).show()
+                        }
                     }
                 })
             }
@@ -87,6 +121,7 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
                 // delete all of ping on the map
             }
             displayFlag = !displayFlag
+
         }
         val searchmapbutton = requireView().findViewById<View>(R.id.search_map_button)
         val nextmapbutton = requireView().findViewById<View>(R.id.next_map_button)
@@ -156,73 +191,119 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
         val localarray1 = resources.getStringArray(R.array.local_do)
         for (local1 in localarray1){
             var localarray2:Array<String>
+            var local_latitude:Array<String>
+            var local_longitude:Array<String>
             when (local1) {
                 "서울특별시" -> {
                     localarray2 = resources.getStringArray(R.array.local_do_seoul)
+                    local_latitude = resources.getStringArray(R.array.local_do_seoul_latitude)
+                    local_longitude = resources.getStringArray(R.array.local_do_seoul_longitude)
                 }
                 "부산광역시" -> {
                     localarray2 = resources.getStringArray(R.array.local_do_busan)
+                    local_latitude = resources.getStringArray(R.array.local_do_busan_latitude)
+                    local_longitude = resources.getStringArray(R.array.local_do_busan_longitude)
                 }
                 "대구광역시" -> {
-                    localarray2 = resources.getStringArray(R.array.local_do_busan)
+                    localarray2 = resources.getStringArray(R.array.local_do_daegu)
+                    local_latitude = resources.getStringArray(R.array.local_do_daegu_latitude)
+                    local_longitude = resources.getStringArray(R.array.local_do_daegu_longitude)
                 }
                 "인천광역시" -> {
                     localarray2 = resources.getStringArray(R.array.local_do_incheon)
+                    local_latitude = resources.getStringArray(R.array.local_do_incheon_latitude)
+                    local_longitude = resources.getStringArray(R.array.local_do_incheon_longitude)
                 }
                 "광주광역시" -> {
                     localarray2 = resources.getStringArray(R.array.local_do_gwangju)
+                    local_latitude = resources.getStringArray(R.array.local_do_gwangju_latitude)
+                    local_longitude = resources.getStringArray(R.array.local_do_gwangju_longitude)
                 }
                 "대전광역시" -> {
                     localarray2 = resources.getStringArray(R.array.local_do_daejeon)
+                    local_latitude = resources.getStringArray(R.array.local_do_daejeon_latitude)
+                    local_longitude = resources.getStringArray(R.array.local_do_daejeon_longitude)
                 }
                 "울산광역시" -> {
                     localarray2 = resources.getStringArray(R.array.local_do_ulsan)
+                    local_latitude = resources.getStringArray(R.array.local_do_ulsan_latitude)
+                    local_longitude = resources.getStringArray(R.array.local_do_ulsan_longitude)
                 }
                 "경기도" -> {
                     localarray2 = resources.getStringArray(R.array.local_do_gyeonggido)
+                    local_latitude = resources.getStringArray(R.array.local_do_gyeonggido_latitude)
+                    local_longitude = resources.getStringArray(R.array.local_do_gyeonggido_longitude)
                 }
                 "강원도" -> {
                     localarray2 = resources.getStringArray(R.array.local_do_gangwondo)
+                    local_latitude = resources.getStringArray(R.array.local_do_gangwondo_latitude)
+                    local_longitude = resources.getStringArray(R.array.local_do_gangwondo_longitude)
                 }
                 "충청북도" -> {
                     localarray2 = resources.getStringArray(R.array.local_do_chungcheongbukdo)
+                    local_latitude = resources.getStringArray(R.array.local_do_chungcheongbukdo_latitude)
+                    local_longitude = resources.getStringArray(R.array.local_do_chungcheongbukdo_longitude)
                 }
                 "충청남도" -> {
                     localarray2 = resources.getStringArray(R.array.local_do_chungcheongnamdo)
+                    local_latitude = resources.getStringArray(R.array.local_do_chungcheongnamdo_latitude)
+                    local_longitude = resources.getStringArray(R.array.local_do_chungcheongnamdo_longitude)
                 }
                 "전라북도" -> {
                     localarray2 = resources.getStringArray(R.array.local_do_jeonlabukdo)
+                    local_latitude = resources.getStringArray(R.array.local_do_jeonlabukdo_latitude)
+                    local_longitude = resources.getStringArray(R.array.local_do_jeonlabukdo_longitude)
                 }
                 "전라남도" -> {
                     localarray2 = resources.getStringArray(R.array.local_do_jeonlanamdo)
+                    local_latitude = resources.getStringArray(R.array.local_do_jeonlanamdo_latitude)
+                    local_longitude = resources.getStringArray(R.array.local_do_jeonlanamdo_longitude)
                 }
                 "경상북도" -> {
                     localarray2 = resources.getStringArray(R.array.local_do_gyeongsangbukdo)
+                    local_latitude = resources.getStringArray(R.array.local_do_gyeongsangbukdo_latitude)
+                    local_longitude = resources.getStringArray(R.array.local_do_gyeongsangbukdo_longitude)
                 }
                 "경상남도" -> {
                     localarray2 = resources.getStringArray(R.array.local_do_gyeongsangnamdo)
+                    local_latitude = resources.getStringArray(R.array.local_do_gyeongsangnamdo_latitude)
+                    local_longitude = resources.getStringArray(R.array.local_do_gyeongsangnamdo_longitude)
                 }
                 "제주특별자치도" -> {
                     localarray2 = resources.getStringArray(R.array.local_do_jejudo)
+                    local_latitude = resources.getStringArray(R.array.local_do_jejudo_latitude)
+                    local_longitude = resources.getStringArray(R.array.local_do_jejudo_longitude)
                 }
                 else -> {
                     localarray2 = resources.getStringArray(R.array.local_do_all)
+                    local_latitude = resources.getStringArray(R.array.local_do_latitude)
+                    local_longitude = resources.getStringArray(R.array.local_do_longitude)
                 }
             }
-            for (local2 in localarray2){
-                localhash[local1 + " " + local2] = 0
+            val index:Int = localarray2.size
+            for (i in 0..index-1){
+                localhash[local1 + " " + localarray2[i]] = Triple(0,local_latitude[i].toDouble(),local_longitude[i].toDouble())
             }
         }
     }
     fun localhash_update(strjson:String){
-        val jobj = JSONObject(strjson)
-        val jarr = jobj.getJSONArray("spark")
-        val s = jarr.length()
-        for (i in 0..s-1){
-            val tempobj = jarr.getJSONObject(i)
-            val value:Int = tempobj.getInt("count")
-            val key = tempobj.getString("region")
-            localhash[key] = value
+        try{
+            val jobj = JSONObject(strjson)
+            val jarr = jobj.getJSONArray("spark")
+            val s = jarr.length()
+            for (i in 0..s-1){
+                val tempobj = jarr.getJSONObject(i)
+                val value:Int = tempobj.getInt("count")
+                val key = tempobj.getString("region")
+                Log.d("1",key)
+                if (key == "세종특별자치시"){
+                    continue
+                }
+                localhash[key] = Triple(value,localhash[key]!!.second,localhash[key]!!.third)
+            }
+        }catch(e:JSONException){
+            e.printStackTrace()
+            Toast.makeText(requireContext(),"json error",Toast.LENGTH_SHORT).show()
         }
     }
     // overriding MapView.MapViewEventListener

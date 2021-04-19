@@ -83,7 +83,7 @@ class localFragment : Fragment() {
                             localarray2 = resources.getStringArray(R.array.local_do_busan)
                         }
                         "대구광역시" -> {
-                            localarray2 = resources.getStringArray(R.array.local_do_busan)
+                            localarray2 = resources.getStringArray(R.array.local_do_daegu)
                         }
                         "인천광역시" -> {
                             localarray2 = resources.getStringArray(R.array.local_do_incheon)
