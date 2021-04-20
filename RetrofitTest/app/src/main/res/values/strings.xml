@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">RetrofitTest</string>
+    <string name="textview">TextView</string>
+</resources>
