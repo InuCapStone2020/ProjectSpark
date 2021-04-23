@@ -7,7 +7,7 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical">
 
         <LinearLayout
@@ -56,14 +56,6 @@
             android:background="@drawable/borderline"
             android:orientation="horizontal">
 
-            <EditText
-                android:id="@+id/editTextTextPersonName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:ems="10"
-                android:inputType="textPersonName" />
-
             <Button
                 android:id="@+id/search_search_button"
                 android:layout_width="wrap_content"
@@ -75,6 +67,44 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/search_recyclerview"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:visibility="invisible">
+
+        </androidx.recyclerview.widget.RecyclerView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:visibility="invisible">
+
+            <Button
+                android:id="@+id/search_prev_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="<"
+                android:textSize="24sp" />
+
+            <TextView
+                android:id="@+id/search_now_page"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@drawable/borderline"
+                android:gravity="center"
+                android:textColor="@color/black"
+                android:textSize="24sp" />
+
+            <Button
+                android:id="@+id/search_next_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text=">"
+                android:textSize="24sp" />
+        </LinearLayout>
+
     </LinearLayout>
 </FrameLayout>

@@ -3,7 +3,6 @@ package inu.project.spark
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
-import android.location.Geocoder
 import android.location.LocationManager
 import android.os.Bundle
 import android.util.Log
@@ -15,17 +14,17 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.get
 import androidx.fragment.app.Fragment
+import com.google.gson.Gson
 import net.daum.mf.map.api.MapPOIItem
 import net.daum.mf.map.api.MapPoint
-import net.daum.mf.map.api.MapReverseGeoCoder
 import net.daum.mf.map.api.MapView
-import okhttp3.*
 import org.json.JSONArray
 import org.json.JSONException
-import org.json.JSONObject
-import java.io.IOException
-import java.lang.Exception
-import java.util.*
+import retrofit2.Retrofit
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.converter.gson.GsonConverterFactory
 
 
 class mapFragment : Fragment(),MapView.MapViewEventListener {
@@ -56,7 +55,7 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
         nowmapbutton.setOnClickListener{
             // service and permission check function
             if(!checkLocationServicesStatus()){
-                //showDialogForLocationSetting()
+                Toast.makeText(context, "gps와 인터넷을 켜주세요",Toast.LENGTH_SHORT).show()
             }
             else{
                 if(checkRunTimePermission()) {
@@ -75,19 +74,25 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
                 //send request that number of message each city to server
                 // if receive json that number of message each city then ping on the map
                 localhash_init()
-                val url = "http://54.147.58.83/weekcount.php"
-                val client = OkHttpClient()
-                val request = Request.Builder().url(url).build()
-                client.newCall(request).enqueue(object: Callback {
-                    override fun onFailure(call: Call, e: IOException) {
-                        Toast.makeText(requireContext(),"connection failed",Toast.LENGTH_SHORT).show()
-                    }
-                    override fun onResponse(call: Call, response: Response) {
-                        localhash_update(response.body?.string().toString())
-                        // use localhash ping all of the map
-                        try{
+                val baseURL = "http://100.26.178.18:3000"
+                val retrofit = Retrofit.Builder()
+                        .baseUrl(baseURL)
+                        .addConverterFactory(GsonConverterFactory.create())
+                        .build()
+                val api = retrofit.create(spark::class.java)
+                val callGetWeekCount = api.getWeekCount()
+                callGetWeekCount.enqueue(object: Callback<List<regionCount>> {
+                    override fun onResponse(call: Call<List<regionCount>>, response: Response<List<regionCount>>) {
+                        if(response.isSuccessful()) {
+                            val resData = Gson().toJson(response.body())
+                            Log.d("weekcountrequest", "Successful")
+
+                            localhash_update(resData)
                             val poiarr = mutableListOf<MapPOIItem>()
                             for (l in localhash){
+                                if(l.value.first == 0){
+                                    continue
+                                }
                                 val marker0 = MapPOIItem()
                                 val point:MapPoint
                                 marker0.itemName = l.key + " : " + l.value.first.toString() + "건"
@@ -109,19 +114,24 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
                                 }
                             }
                             mapView.addPOIItems(poiarr.toTypedArray())
-                        }catch(e:IOException){
-                            e.printStackTrace()
-                            Toast.makeText(requireContext(),"error",Toast.LENGTH_SHORT).show()
+
+                        } else {
+                            Log.d("weekcountrequest", "notSuccessful")
                         }
                     }
+
+                    override fun onFailure(call: Call<List<regionCount>>, t: Throwable) {
+                        Log.e("weekcountrequest", "onFailure")
+                    }
                 })
+
             }
             // if displayFlag is True then
             else{
                 // delete all of ping on the map
+                mapView.removeAllPOIItems()
             }
             displayFlag = !displayFlag
-
         }
         val searchmapbutton = requireView().findViewById<View>(R.id.search_map_button)
         val nextmapbutton = requireView().findViewById<View>(R.id.next_map_button)
@@ -131,6 +141,10 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
             viewmapbutton.visibility = View.INVISIBLE
             searchmapbutton.visibility = View.INVISIBLE
             // if displayflag is true then inactive this function
+            if (displayFlag){
+                mapView.removeAllPOIItems()
+                displayFlag = !displayFlag
+            }
             // active button
             markerFlag = true
             requireView().findViewById<View>(R.id.search_map_text).visibility = View.VISIBLE
@@ -288,16 +302,14 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
     }
     fun localhash_update(strjson:String){
         try{
-            val jobj = JSONObject(strjson)
-            val jarr = jobj.getJSONArray("spark")
+            val jarr = JSONArray(strjson)
             val s = jarr.length()
             for (i in 0..s-1){
                 val tempobj = jarr.getJSONObject(i)
                 val value:Int = tempobj.getInt("count")
-                val key = tempobj.getString("region")
-                Log.d("1",key)
+                var key = tempobj.getString("region")
                 if (key == "세종특별자치시"){
-                    continue
+                    key += " 전체"
                 }
                 localhash[key] = Triple(value,localhash[key]!!.second,localhash[key]!!.third)
             }

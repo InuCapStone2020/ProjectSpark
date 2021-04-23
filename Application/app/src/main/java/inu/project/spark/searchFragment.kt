@@ -3,22 +3,24 @@ package inu.project.spark
 import android.app.DatePickerDialog
 import android.app.Dialog
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.*
-import okhttp3.*
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.gson.Gson
+import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
-import java.io.IOException
-import org.threeten.bp.LocalDate
-import org.threeten.bp.LocalDateTime
-import org.threeten.bp.ZoneOffset
-import org.threeten.bp.format.DateTimeFormatter
-import java.text.DateFormat
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.util.*
 
 class searchFragment : Fragment() {
@@ -35,16 +37,30 @@ class searchFragment : Fragment() {
         //check network service 추가
         //mindate 서버로부터 가져오기
         var minstr:String = "start"
-        val url = "http://54.147.58.83/mindate.php"
-        val client = OkHttpClient()
-        val request = Request.Builder().url(url).build()
-        client.newCall(request).enqueue(object: Callback{
-            override fun onFailure(call: Call, e: IOException) {
-                minstr="connection failed"
-            }
-            override fun onResponse(call: Call, response: Response) {
-                minstr= response.body?.string().toString()
 
+        val baseURL = "http://100.26.178.18:3000"
+
+        val retrofit = Retrofit.Builder()
+            .baseUrl(baseURL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        val api = retrofit.create(spark::class.java)
+        val callGetMindate = api.getMindate()
+
+        callGetMindate.enqueue(object: Callback<List<mindate>> {
+            override fun onResponse(call: Call<List<mindate>>, response: Response<List<mindate>>) {
+                if(response.isSuccessful()) {
+                    minstr = Gson().toJson(response.body())
+                    Log.d("getMindate", "Successful")
+                } else {
+                    minstr = "connection failed"
+                    Log.d("getMindate", "notSuccessful")
+                }
+            }
+            override fun onFailure(call: Call<List<mindate>>, t: Throwable) {
+                minstr = "connection failed"
+                Log.e("getMindate", "onFailure")
             }
         })
         //시간 설정
@@ -64,6 +80,7 @@ class searchFragment : Fragment() {
 
             while(true) {
                 if (minstr != "start") {
+                    Log.d("test",minstr)
                     break
                 }
             }
@@ -92,10 +109,12 @@ class searchFragment : Fragment() {
             }
             start.setOnClickListener{
                 // jsonstring parse to string
-                val temp = JSONObject(minstr).get("mindate").toString()
+                val temparr = JSONArray(minstr)
+                val tempobj = temparr.getJSONObject(0)
+                val temp = tempobj.getString("mindate")
                 val a = temp.split("-")
                 val b = Calendar.getInstance()
-                b.set(a[0].toInt(),a[1].toInt()-1,a[2].toInt())
+                b.set(a[0].toInt(),a[1].toInt()-1,(a[2].split("T")[0]).toInt())
                 if (end.text.toString() == ""){
                     l(start,b.timeInMillis,time.timeInMillis)
                 }
@@ -109,10 +128,12 @@ class searchFragment : Fragment() {
             }
             end.setOnClickListener{
                 if(start.text.toString() == ""){
-                    val temp = JSONObject(minstr).get("mindate").toString()
+                    val temparr = JSONArray(minstr)
+                    val tempobj = temparr.getJSONObject(0)
+                    val temp = tempobj.getString("mindate")
                     val a = temp.split("-")
                     val b = Calendar.getInstance()
-                    b.set(a[0].toInt(),a[1].toInt()-1,a[2].toInt())
+                    b.set(a[0].toInt(),a[1].toInt()-1,(a[2].split("T")[0]).toInt())
                     l(end,b.timeInMillis,time.timeInMillis)
                 }
                 else{
@@ -364,6 +385,71 @@ class searchFragment : Fragment() {
                 }
                 builder.dismiss()
             }
+        }
+        val searchbutton = requireView().findViewById<View>(R.id.search_search_button) as Button
+        val resultRecycler = requireView().findViewById<View>(R.id.search_recyclerview) as RecyclerView
+        // recycler manager define
+        val layoutManager = LinearLayoutManager(context)
+        resultRecycler.layoutManager = layoutManager
+        resultRecycler.setHasFixedSize(true)
+        // recycler adapter define
+        var resultadpater:localAdapter? = null
+        // data list init
+        var resultlist:MutableList<String>? = null
+        var page = 0
+        var region:String = ""
+        var sdate:String = ""
+        var edate:String = ""
+        var event:String = ""
+        searchbutton.setOnClickListener{
+            // region update
+            if (locallist.size == 0){
+                region = "전체 전체"
+            }
+            else{
+                region = locallist[0]
+                for (i in (1..locallist.size)){
+                    region += "','" + locallist[i]
+                }
+            }
+            // date update
+            if (datelist == ""){
+                sdate = datelist.split("~")[0]
+                edate = datelist.split("~")[1]
+                sdate.replace('-','/')
+                edate.replace('-','/')
+            }
+            else{
+                sdate = "2000/01/01"
+                edate = "9999/12/31"
+            }
+            // event update
+            if (eventlist.size == 0){
+                event = "전염병','자연 재해','기타"
+            }
+            else{
+                event = eventlist[0]
+                for (i in (1..eventlist.size)){
+                    event += "','" + eventlist[i]
+                }
+            }
+            page = 1
+            val callGetSearch = api.getSearch(region, sdate, edate, event, page)
+
+            callGetSearch.enqueue(object : Callback<ResultGetSearch> {
+                override fun onResponse(call: Call<ResultGetSearch>, response: Response<ResultGetSearch>) {
+                    if(response.isSuccessful()) {
+                        var resData = response.body()
+                        Log.d("TEST", Gson().toJson(resData))
+                    } else {
+                        Log.d("TEST", "사실상 실패")
+                    }
+                }
+
+                override fun onFailure(call: Call<ResultGetSearch>, t: Throwable) {
+                    Log.e("TEST", "실패")
+                }
+            })
         }
         // 검색 php 접속 추가
     }
