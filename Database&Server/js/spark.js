@@ -2,6 +2,7 @@ var mysql = require("mysql");
 var express = require("express");
 var bodyParser = require("body-parser"); //using body-parser for body parsing
 var app = express();
+var url = require("url");
 
 app.use(bodyParser.json()); //format is json
 app.use(bodyParser.urlencoded({ extended: true })); //querystring module
@@ -13,10 +14,10 @@ app.listen(3000, () => {
 
 //interlock to mysql
 var connection = mysql.createConnection({
-    host: "sparkdb.cs6bwutyplia.us-east-1.rds.amazonaws.com", //end point address
-    user: "spark", //masteruser id
-    database: "spark", //database to access
-    password: "#spark16", //database pw
+    host: "", //end point address
+    user: "", //masteruser id
+    database: "", //database to access
+    password: "", //database pw
     port: 3306
 });
 
@@ -69,23 +70,53 @@ app.post("/messageinsert", (req, res) => {
 });
 
 app.get("/search", (req, res) => {
-    var region = req.body.region;
+    var _url = req.url;
+    var querydata = url.parse(_url, true).query;
+
+    if (querydata.region) {
+        var region = querydata.region;
+    } else {
+        var region = req.body.region;
+    }
     if (region == "") {
         region = "전체 전체";
     }
-    var s_date = req.body.sdate;
+
+    if (querydata.sdate) {
+        var s_date = querydata.sdate;
+    } else {
+        var s_date = req.body.sdate;
+    }
     if (s_date == "") {
         s_date = "2000-01-01";
     }
-    var e_date = req.body.edate;
+
+    if (querydata.edate) {
+        var e_date = querydata.edate;
+    } else {
+        var e_date = req.body.edate;
+    }
     if (e_date == "") {
         e_date = "9999-12-31";
     }
-    var event = req.body.event;
-    if (event == "") {
+
+    if (querydata.event) {
+        var event = querydata.event;
+    } else {
+        var event = req.body.event;
+    }
+    if (event != "") {
+        var splitEvent = event.split("','");
+        event = splitEvent;
+    } else {
         event = ["전염병", "자연 재해", "기타"];
     }
-    var page = req.body.page;
+
+    if (querydata.page) {
+        var page = querydata.page;
+    } else {
+        var page = req.body.page;
+    }
     if (page == "") {
         page = 1;
     }
@@ -109,18 +140,16 @@ app.get("/search", (req, res) => {
         var mergeRegion = splitRegion.join("|");
         region = mergeRegion;
 
-        if (page == 1) {
-            var countSQL = "select count(*) as count from Message_List where (region REGEXP ?) and (m_date between ? and ?) and (event in(?))";
-            var qs = [region, s_date, e_date, event];
+        var countSQL = "select count(*) as count from Message_List where (region REGEXP ?) and (m_date between ? and ?) and (event in(?))";
+        var qs = [region, s_date, e_date, event];
 
-            connection.query(countSQL, qs, (err, result) => {
-                if (err) {
-                    console.log(err);
-                } else {
-                    cnt = result;
-                }
-            });
-        }
+        connection.query(countSQL, qs, (err, result) => {
+            if (err) {
+                console.log(err);
+            } else {
+                cnt = result;
+            }
+        });
 
         var searchSQL = "select * from Message_List where (region REGEXP ?) and (m_date between ? and ?) and (event in(?)) order by num desc, subnum asc limit ?, 10";
         qs = [region, s_date, e_date, event, offset];
@@ -136,18 +165,17 @@ app.get("/search", (req, res) => {
             }
         });
     } else {
-        if (page == 1) {
-            var countSQL = "select count(*) as count from Message_List where (m_date between ? and ?) and (event in(?))";
-            var qs = [s_date, e_date, event];
+        var countSQL = "select count(*) as count from Message_List where (m_date between ? and ?) and (event in(?))";
+        var qs = [s_date, e_date, event];
 
-            connection.query(countSQL, qs, (err, result) => {
-                if (err) {
-                    console.log(err);
-                } else {
-                    cnt = result;
-                }
-            });
-        }
+        connection.query(countSQL, qs, (err, result) => {
+            if (err) {
+                console.log(err);
+            } else {
+                cnt = result;
+            }
+        });
+
         var searchSQL = "select * from Message_List where (m_date between ? and ?) and (event in(?)) order by num desc, subnum asc limit ?, 10";
         qs = [s_date, e_date, event, offset];
 
@@ -190,7 +218,13 @@ app.get("/weekcount", (req, res) => {
 });
 
 app.get("/weekdetail", (req, res) => {
-    var region = req.body.region;
+    var _url = req.url;
+    var querydata = url.parse(_url, true).query;
+    if (querydata.region) {
+        var region = querydata.region;
+    } else {
+        var region = req.body.region;
+    }
 
     var splitRegion = region.split("','");
     var cnt = splitRegion.length;
@@ -222,7 +256,14 @@ app.get("/weekdetail", (req, res) => {
 app.get("/notice", (req, res) => {
     var noticeSQL = "";
 
-    var region = req.body.region;
+    var _url = req.url;
+    var querydata = url.parse(_url, true).query;
+    if (querydata.region) {
+        var region = querydata.region;
+    } else {
+        var region = req.body.region;
+    }
+
     if (region == "") {
         region = "전체 전체";
     }
