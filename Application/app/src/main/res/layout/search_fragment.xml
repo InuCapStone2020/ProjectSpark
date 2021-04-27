@@ -74,8 +74,10 @@
         </androidx.recyclerview.widget.RecyclerView>
 
         <LinearLayout
+            android:id="@+id/search_button_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_weight="0"
             android:orientation="horizontal"
             android:visibility="invisible">
 
@@ -84,7 +86,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="<"
+                android:text="&lt;"
                 android:textSize="24sp" />
 
             <TextView
@@ -102,7 +104,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text=">"
+                android:text="&gt;"
                 android:textSize="24sp" />
         </LinearLayout>
 

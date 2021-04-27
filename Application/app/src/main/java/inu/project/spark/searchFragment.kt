@@ -14,7 +14,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.Gson
 import org.json.JSONArray
-import org.json.JSONException
 import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
@@ -388,15 +387,23 @@ class searchFragment : Fragment() {
         }
         val searchbutton = requireView().findViewById<View>(R.id.search_search_button) as Button
         val resultRecycler = requireView().findViewById<View>(R.id.search_recyclerview) as RecyclerView
+        val resultbuttonset = requireView().findViewById<View>(R.id.search_button_layout)
+        val resultprevbutton = requireView().findViewById<View>(R.id.search_prev_button)
+        val resultnextbutton = requireView().findViewById<View>(R.id.search_next_button)
+        val resultnowbutton = requireView().findViewById<View>(R.id.search_now_page) as TextView
+
         // recycler manager define
         val layoutManager = LinearLayoutManager(context)
         resultRecycler.layoutManager = layoutManager
         resultRecycler.setHasFixedSize(true)
         // recycler adapter define
-        var resultadpater:localAdapter? = null
+        val resultlist:MutableList<String> = mutableListOf()
+        val resultadpater = searchAdapter(resultlist)
+        resultRecycler.adapter = resultadpater
         // data list init
-        var resultlist:MutableList<String>? = null
+
         var page = 0
+        var maxpage = 0
         var region:String = ""
         var sdate:String = ""
         var edate:String = ""
@@ -408,12 +415,12 @@ class searchFragment : Fragment() {
             }
             else{
                 region = locallist[0]
-                for (i in (1..locallist.size)){
+                for (i in 1 until locallist.size){
                     region += "','" + locallist[i]
                 }
             }
             // date update
-            if (datelist == ""){
+            if (datelist != ""){
                 sdate = datelist.split("~")[0]
                 edate = datelist.split("~")[1]
                 sdate.replace('-','/')
@@ -429,28 +436,148 @@ class searchFragment : Fragment() {
             }
             else{
                 event = eventlist[0]
-                for (i in (1..eventlist.size)){
+                for (i in (1 until eventlist.size)){
                     event += "','" + eventlist[i]
                 }
             }
             page = 1
             val callGetSearch = api.getSearch(region, sdate, edate, event, page)
-
             callGetSearch.enqueue(object : Callback<ResultGetSearch> {
                 override fun onResponse(call: Call<ResultGetSearch>, response: Response<ResultGetSearch>) {
                     if(response.isSuccessful()) {
-                        var resData = response.body()
-                        Log.d("TEST", Gson().toJson(resData))
+                        val resData =  Gson().toJson(response.body())
+                        Log.d("TEST", resData)
+                        resultlist.clear()
+                        maxpage = JSONObject(resData).getJSONArray("cnt").getJSONObject(0).getInt("count")/10 + 1
+                        val tempobject = JSONObject(resData).getJSONArray("result")
+                        for (i in 0 until tempobject.length()){
+                            resultlist.add(tempobject.getJSONObject(i).toString())
+                        }
+                        // notify adapter
+                        resultadpater.notifyDataSetChanged()
+                        resultRecycler.visibility = View.VISIBLE
+                        resultbuttonset.visibility = View.VISIBLE
+                        resultnowbutton.text = page.toString()
+                        Log.d("TEST", maxpage.toString())
                     } else {
                         Log.d("TEST", "사실상 실패")
                     }
                 }
-
                 override fun onFailure(call: Call<ResultGetSearch>, t: Throwable) {
                     Log.e("TEST", "실패")
                 }
             })
         }
-        // 검색 php 접속 추가
+        resultprevbutton.setOnClickListener{
+            if(page == 1){
+                Toast.makeText(context,"첫번쨰 페이지입니다.",Toast.LENGTH_SHORT).show()
+            }
+            else{
+                page-=1
+                val callGetSearch = api.getSearch(region, sdate, edate, event, page)
+                callGetSearch.enqueue(object : Callback<ResultGetSearch> {
+                    override fun onResponse(call: Call<ResultGetSearch>, response: Response<ResultGetSearch>) {
+                        if(response.isSuccessful()) {
+                            val resData =  Gson().toJson(response.body())
+                            Log.d("TEST", resData)
+                            resultlist.clear()
+                            val tempobject = JSONObject(resData).getJSONArray("result")
+                            for (i in 0 until tempobject.length()){
+                                resultlist.add(tempobject.getJSONObject(i).toString())
+                            }
+                            // notify adapter
+                            resultadpater.notifyDataSetChanged()
+                            resultnowbutton.text = page.toString()
+                        } else {
+                            Log.d("TEST", "사실상 실패")
+                        }
+                    }
+                    override fun onFailure(call: Call<ResultGetSearch>, t: Throwable) {
+                        Log.e("TEST", "실패")
+                    }
+                })
+            }
+        }
+        resultnextbutton.setOnClickListener{
+            if (page == maxpage){
+                Toast.makeText(context,"마지막 페이지입니다.",Toast.LENGTH_SHORT).show()
+            }
+            else{
+                page+=1
+                val callGetSearch = api.getSearch(region, sdate, edate, event, page)
+                callGetSearch.enqueue(object : Callback<ResultGetSearch> {
+                    override fun onResponse(call: Call<ResultGetSearch>, response: Response<ResultGetSearch>) {
+                        if(response.isSuccessful()) {
+                            val resData =  Gson().toJson(response.body())
+                            Log.d("TEST", resData)
+                            resultlist.clear()
+                            val tempobject = JSONObject(resData).getJSONArray("result")
+                            for (i in 0 until tempobject.length()){
+                                resultlist.add(tempobject.getJSONObject(i).toString())
+                            }
+                            // notify adapter
+                            resultadpater.notifyDataSetChanged()
+                            resultnowbutton.text = page.toString()
+                        } else {
+                            Log.d("TEST", "사실상 실패")
+                        }
+                    }
+                    override fun onFailure(call: Call<ResultGetSearch>, t: Throwable) {
+                        Log.e("TEST", "실패")
+                    }
+                })
+            }
+        }
+        resultnowbutton.setOnClickListener{
+            val pagebuilder = Dialog(requireContext())
+            pagebuilder.setContentView(R.layout.search_page_dialog)
+            pagebuilder.window?.attributes?.width = WindowManager.LayoutParams.MATCH_PARENT
+            val searchspinner: Spinner = pagebuilder.findViewById(R.id.spinner2) as Spinner
+            val pagearray = mutableListOf<Int>()
+            for (i in 1..maxpage){
+                pagearray.add(i)
+            }
+            val adspinner1 = ArrayAdapter<Int>(requireContext(), android.R.layout.simple_spinner_dropdown_item, pagearray);
+            searchspinner.adapter = adspinner1
+            var dialoginitflag = false
+            searchspinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                    if (dialoginitflag) {
+                        page = pagearray[position]
+                        val callGetSearch = api.getSearch(region, sdate, edate, event, page)
+                        callGetSearch.enqueue(object : Callback<ResultGetSearch> {
+                            override fun onResponse(call: Call<ResultGetSearch>, response: Response<ResultGetSearch>) {
+                                if (response.isSuccessful()) {
+                                    val resData = Gson().toJson(response.body())
+                                    Log.d("TEST", resData)
+                                    resultlist.clear()
+                                    val tempobject = JSONObject(resData).getJSONArray("result")
+                                    for (i in 0 until tempobject.length()) {
+                                        resultlist.add(tempobject.getJSONObject(i).toString())
+                                    }
+                                    // notify adapter
+                                    resultadpater.notifyDataSetChanged()
+                                    resultnowbutton.text = page.toString()
+
+                                } else {
+                                    Log.d("TEST", "사실상 실패")
+                                }
+                            }
+
+                            override fun onFailure(call: Call<ResultGetSearch>, t: Throwable) {
+                                Log.e("TEST", "실패")
+                            }
+                        })
+                        pagebuilder.dismiss()
+                    }
+                    else{
+                        dialoginitflag = !dialoginitflag
+                    }
+                }
+                override fun onNothingSelected(parent: AdapterView<*>?) {
+                }
+            }
+            pagebuilder.show()
+        }
     }
 }

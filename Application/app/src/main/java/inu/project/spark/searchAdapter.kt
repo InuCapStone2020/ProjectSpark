@@ -1,9 +1,9 @@
 package inu.project.spark
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import org.json.JSONException
@@ -11,8 +11,10 @@ import org.json.JSONObject
 
 class searchAdapter(list:MutableList<String>) : RecyclerView.Adapter<searchAdapter.MyViewHolder>() {
     private var jsonList:MutableList<String> = list
-    private val local1 = "local1"
-    private val local2 = "local2"
+    private val content = "CONTENT"
+    private val date = "M_DATE"
+    private val time = "M_TIME"
+    private val region = "REGION"
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): searchAdapter.MyViewHolder {
         val inflater = LayoutInflater.from(parent.context)
@@ -28,35 +30,38 @@ class searchAdapter(list:MutableList<String>) : RecyclerView.Adapter<searchAdapt
         val strjson = jsonList[position]
         try{
             val tempobject = JSONObject(strjson)
-            val templocal1 = tempobject.get(local1).toString()
-            val templocal2 = tempobject.get(local2).toString()
-            val tempstr = templocal1 + templocal2
+            val tempregion = tempobject.get(region).toString()
+            val tempbody = tempobject.get(content).toString()
+            val tempdate = tempobject.get(date).toString().split("T")[0]
+            val temptime = tempobject.get(time).toString()
+            val tempdatetime = "$tempdate $temptime"
 
-            holder.textView1.text = templocal1
-            holder.textView2.text = templocal2
+            val tempregionarr = tempregion.split(" ")
+            var x = ""
+            for (i in tempregionarr.indices){
+                x += "\n"+tempregionarr[i]
+            }
+            var y = ""
+            val tempbodyarr = tempbody.split("\n")
+            for (i in tempbodyarr.indices){
+                y+=tempbodyarr[i]
+            }
+            holder.item_region.text = x
+            holder.item_body.text = y
+            holder.item_date.text = tempdatetime
         }
         catch(e:JSONException){
             e.printStackTrace()
         }
     }
     inner class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView){
-        var textView1:TextView
-        var textView2:TextView
-        var button1:Button
+        var item_region:TextView
+        var item_body:TextView
+        var item_date:TextView
         init{
-            textView1 = itemView.findViewById<TextView>(R.id.local_text1)
-            textView2 = itemView.findViewById<TextView>(R.id.local_text2)
-            button1 = itemView.findViewById<Button>(R.id.local_delete_button)
-            button1.setOnClickListener{
-                var position = adapterPosition
-                remove(position)
-            }
+            item_region = itemView.findViewById<TextView>(R.id.search_item_region)
+            item_body = itemView.findViewById<TextView>(R.id.search_item_body)
+            item_date = itemView.findViewById<TextView>(R.id.search_item_date)
         }
-    }
-    private fun remove(position: Int){
-        MyApplication.prefs.deletelocal(position)
-        jsonList.removeAt(position)
-        notifyItemRemoved(position)
-        notifyItemRangeChanged(position,jsonList.size)
     }
 }
