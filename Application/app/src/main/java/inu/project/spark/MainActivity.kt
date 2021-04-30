@@ -1,22 +1,39 @@
 package inu.project.spark
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.job.JobInfo
+import android.app.job.JobScheduler
+import android.content.ComponentName
+import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.util.Base64
 import android.util.Log
 import android.view.View
+import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityCompat
+import inu.project.spark.MyApplication.Companion.prefs
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
+import java.util.*
+import java.util.concurrent.TimeUnit
+import kotlin.time.ExperimentalTime
+import kotlin.time.minutes
 
 
 class MainActivity : AppCompatActivity() {
+    private var notificationManager: NotificationManager? = null
+    @ExperimentalTime
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -52,26 +69,72 @@ class MainActivity : AppCompatActivity() {
         val button_main_search = findViewById<View>(R.id.button_main_search)
         // set goto each layout by button
         button_main_map.setOnClickListener{
-            var i = Intent(this, SubActivity::class.java)
+            val i = Intent(this, SubActivity::class.java)
             i.putExtra("fragment", R.id.button_main_map)
             startActivity(i)
         }
         button_main_setting.setOnClickListener{
-            var i = Intent(this, SubActivity::class.java)
+            val i = Intent(this, SubActivity::class.java)
             i.putExtra("fragment", R.id.button_main_setting)
             startActivity(i)
         }
         button_main_repository.setOnClickListener{
-            var i = Intent(this, SubActivity::class.java)
+            val i = Intent(this, SubActivity::class.java)
             i.putExtra("fragment", R.id.button_main_repository)
             startActivity(i)
         }
         button_main_search.setOnClickListener{
-            var i = Intent(this, SubActivity::class.java)
+            val i = Intent(this, SubActivity::class.java)
             i.putExtra("fragment", R.id.button_main_search)
             startActivity(i)
         }
+        // alarm schedule set
+        Log.d("boolean",prefs.getBoolean("alarmflag",false).toString())
+        if(!prefs.getBoolean("alarmflag",false)){
+            val js = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
+            val serviceComponent = ComponentName(this, MyJobService::class.java)
+            val celandar = Calendar.getInstance()
+            val minute = (60 - celandar.get(Calendar.MINUTE))*1000*60
+            Log.d("minute",minute.toLong().toString())
+            val jobInfo = JobInfo.Builder(0, serviceComponent)
+                    .setMinimumLatency(minute.toLong())
+                    .setOverrideDeadline(minute.toLong())
+                    .build()
+            js.schedule(jobInfo)
+            prefs.setBoolean("alarmflag",true)
+
+             /*
+            val celandar = Calendar.getInstance()
+            val minute = (60 - celandar.get(Calendar.MINUTE))*60*1000
+
+            val timer = Timer()
+            val task = object: TimerTask(){
+                override fun run(){
+                    notificationManager= getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                    //createNotificationChanel("id","name","description")
+                }
+            }
+            timer.schedule(task,minute.toLong(),60*60*1000)
+
+              */
+        }
+
     }
+    /*
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun createNotificationChanel(id:String, name:String, description:String){
+        val importance = NotificationManager.IMPORTANCE_LOW
+        val channel = NotificationChannel(id,name,importance)
+        channel.description = description
+        channel.enableLights(true)
+        channel.lightColor = Color.RED
+        channel.enableVibration(true)
+        channel.vibrationPattern = longArrayOf(100,200,300,400,500,400,300,200,100)
+        notificationManager?.createNotificationChannel(channel)
+    }
+
+     */
+    /*
     private fun getHashKey() {
         var packageInfo: PackageInfo? = null
         try {
@@ -90,4 +153,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+     */
 }

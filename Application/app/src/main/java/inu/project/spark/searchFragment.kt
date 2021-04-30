@@ -1,7 +1,11 @@
 package inu.project.spark
 
+import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.app.Dialog
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -21,6 +25,7 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.*
+import java.util.concurrent.Phaser
 
 class searchFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -37,8 +42,8 @@ class searchFragment : Fragment() {
         //mindate 서버로부터 가져오기
         var minstr:String = "start"
 
-        val baseURL = "http://100.26.178.18:3000"
-
+        val baseURL = "http://54.156.38.187:3000"
+        // try catch 설정
         val retrofit = Retrofit.Builder()
             .baseUrl(baseURL)
             .addConverterFactory(GsonConverterFactory.create())
@@ -67,6 +72,7 @@ class searchFragment : Fragment() {
         datebutton.setOnClickListener{
             val builder = Dialog(requireContext())
             builder.setContentView(R.layout.search_date_dialog)
+            builder.setTitle("날짜 설정")
             builder.window?.attributes?.width = WindowManager.LayoutParams.MATCH_PARENT
             builder.show()
             val start = builder.findViewById<View>(R.id.searchdialog_startdate) as TextView
@@ -389,9 +395,15 @@ class searchFragment : Fragment() {
         val resultRecycler = requireView().findViewById<View>(R.id.search_recyclerview) as RecyclerView
         val resultbuttonset = requireView().findViewById<View>(R.id.search_button_layout)
         val resultprevbutton = requireView().findViewById<View>(R.id.search_prev_button)
+        val resultprevprevbutton = requireView().findViewById<View>(R.id.search_prev_prev_button)
         val resultnextbutton = requireView().findViewById<View>(R.id.search_next_button)
-        val resultnowbutton = requireView().findViewById<View>(R.id.search_now_page) as TextView
-
+        val resultnextnextbutton = requireView().findViewById<View>(R.id.search_next_next_button)
+        val resultpage1 =  requireView().findViewById<View>(R.id.search_page1) as TextView
+        val resultpage2 =  requireView().findViewById<View>(R.id.search_page2) as TextView
+        val resultpage3 =  requireView().findViewById<View>(R.id.search_page3) as TextView
+        val resultpage4 =  requireView().findViewById<View>(R.id.search_page4) as TextView
+        val resultpage5 =  requireView().findViewById<View>(R.id.search_page5) as TextView
+        val pagelist = listOf(resultpage1,resultpage2,resultpage3,resultpage4,resultpage5)
         // recycler manager define
         val layoutManager = LinearLayoutManager(context)
         resultRecycler.layoutManager = layoutManager
@@ -408,6 +420,69 @@ class searchFragment : Fragment() {
         var sdate:String = ""
         var edate:String = ""
         var event:String = ""
+
+        fun search(selectpage:Int){
+            val callGetSearch = api.getSearch(region, sdate, edate, event, page)
+            callGetSearch.enqueue(object : Callback<ResultGetSearch> {
+                @SuppressLint("UseCompatLoadingForDrawables")
+                override fun onResponse(call: Call<ResultGetSearch>, response: Response<ResultGetSearch>) {
+                    if(response.isSuccessful()) {
+                        val resData =  Gson().toJson(response.body())
+                        Log.d("TEST", resData)
+                        resultlist.clear()
+                        val tempobject = JSONObject(resData).getJSONArray("result")
+                        for (i in 0 until tempobject.length()){
+                            resultlist.add(tempobject.getJSONObject(i).toString())
+                        }
+                        // notify adapter
+                        resultadpater.notifyDataSetChanged()
+                        layoutManager.scrollToPosition(0)
+                        // page number update
+                        if (selectpage != 1 && selectpage != 2 && selectpage != maxpage && selectpage != maxpage-1){
+                            var x = -2
+                            for (p in pagelist) {
+                                p.text = (page + x).toString()
+                                p.background = requireContext().getDrawable(R.drawable.borderline)
+                                p.setTextColor(Color.BLACK)
+                                x++
+                            }
+                            pagelist[2].background = requireContext().getDrawable(R.drawable.selectedbox)
+                            pagelist[2].setTextColor(Color.WHITE)
+                        }
+                        else if (selectpage == 1 || selectpage == 2){
+                            var x = 1
+                            for (p in pagelist) {
+                                p.text = (x).toString()
+                                p.background = requireContext().getDrawable(R.drawable.borderline)
+                                p.setTextColor(Color.BLACK)
+                                x++
+                            }
+                            pagelist[selectpage-1].background = requireContext().getDrawable(R.drawable.selectedbox)
+                            pagelist[selectpage-1].setTextColor(Color.WHITE)
+                        }
+                        else{
+                            var x = maxpage-4
+                            for (p in pagelist) {
+                                p.text = (x).toString()
+                                p.background = requireContext().getDrawable(R.drawable.borderline)
+                                p.setTextColor(Color.BLACK)
+                                x++
+                            }
+                            pagelist[4+selectpage-maxpage].background = requireContext().getDrawable(R.drawable.selectedbox)
+                            pagelist[4+selectpage-maxpage].setTextColor(Color.WHITE)
+                        }
+
+                    } else {
+                        Log.d("TEST", "사실상 실패")
+                    }
+                }
+                override fun onFailure(call: Call<ResultGetSearch>, t: Throwable) {
+                    Log.e("TEST", "실패")
+                }
+            })
+        }
+
+
         searchbutton.setOnClickListener{
             // region update
             if (locallist.size == 0){
@@ -443,12 +518,17 @@ class searchFragment : Fragment() {
             page = 1
             val callGetSearch = api.getSearch(region, sdate, edate, event, page)
             callGetSearch.enqueue(object : Callback<ResultGetSearch> {
+                @SuppressLint("UseCompatLoadingForDrawables")
                 override fun onResponse(call: Call<ResultGetSearch>, response: Response<ResultGetSearch>) {
                     if(response.isSuccessful()) {
                         val resData =  Gson().toJson(response.body())
                         Log.d("TEST", resData)
                         resultlist.clear()
-                        maxpage = JSONObject(resData).getJSONArray("cnt").getJSONObject(0).getInt("count")/10 + 1
+                        val cnt = JSONObject(resData).getJSONArray("cnt").getJSONObject(0).getInt("count")
+                        maxpage = cnt/10 + 1
+                        if (cnt%10 == 0){
+                            maxpage--
+                        }
                         val tempobject = JSONObject(resData).getJSONArray("result")
                         for (i in 0 until tempobject.length()){
                             resultlist.add(tempobject.getJSONObject(i).toString())
@@ -457,7 +537,20 @@ class searchFragment : Fragment() {
                         resultadpater.notifyDataSetChanged()
                         resultRecycler.visibility = View.VISIBLE
                         resultbuttonset.visibility = View.VISIBLE
-                        resultnowbutton.text = page.toString()
+                        // page init
+                        var x = 1
+                        for (p in pagelist){
+                            p.text = x.toString()
+                            p.background = requireContext().getDrawable(R.drawable.borderline)
+                            p.setTextColor(Color.BLACK)
+                            p.setOnClickListener {
+                                page = Integer.parseInt(p.text.toString())
+                                search(page)
+                            }
+                            x++
+                        }
+                        pagelist[0].background = requireContext().getDrawable(R.drawable.selectedbox)
+                        pagelist[0].setTextColor(Color.WHITE)
                         Log.d("TEST", maxpage.toString())
                     } else {
                         Log.d("TEST", "사실상 실패")
@@ -472,30 +565,9 @@ class searchFragment : Fragment() {
             if(page == 1){
                 Toast.makeText(context,"첫번쨰 페이지입니다.",Toast.LENGTH_SHORT).show()
             }
-            else{
-                page-=1
-                val callGetSearch = api.getSearch(region, sdate, edate, event, page)
-                callGetSearch.enqueue(object : Callback<ResultGetSearch> {
-                    override fun onResponse(call: Call<ResultGetSearch>, response: Response<ResultGetSearch>) {
-                        if(response.isSuccessful()) {
-                            val resData =  Gson().toJson(response.body())
-                            Log.d("TEST", resData)
-                            resultlist.clear()
-                            val tempobject = JSONObject(resData).getJSONArray("result")
-                            for (i in 0 until tempobject.length()){
-                                resultlist.add(tempobject.getJSONObject(i).toString())
-                            }
-                            // notify adapter
-                            resultadpater.notifyDataSetChanged()
-                            resultnowbutton.text = page.toString()
-                        } else {
-                            Log.d("TEST", "사실상 실패")
-                        }
-                    }
-                    override fun onFailure(call: Call<ResultGetSearch>, t: Throwable) {
-                        Log.e("TEST", "실패")
-                    }
-                })
+            else {
+                page -= 1
+                search(page)
             }
         }
         resultnextbutton.setOnClickListener{
@@ -504,80 +576,26 @@ class searchFragment : Fragment() {
             }
             else{
                 page+=1
-                val callGetSearch = api.getSearch(region, sdate, edate, event, page)
-                callGetSearch.enqueue(object : Callback<ResultGetSearch> {
-                    override fun onResponse(call: Call<ResultGetSearch>, response: Response<ResultGetSearch>) {
-                        if(response.isSuccessful()) {
-                            val resData =  Gson().toJson(response.body())
-                            Log.d("TEST", resData)
-                            resultlist.clear()
-                            val tempobject = JSONObject(resData).getJSONArray("result")
-                            for (i in 0 until tempobject.length()){
-                                resultlist.add(tempobject.getJSONObject(i).toString())
-                            }
-                            // notify adapter
-                            resultadpater.notifyDataSetChanged()
-                            resultnowbutton.text = page.toString()
-                        } else {
-                            Log.d("TEST", "사실상 실패")
-                        }
-                    }
-                    override fun onFailure(call: Call<ResultGetSearch>, t: Throwable) {
-                        Log.e("TEST", "실패")
-                    }
-                })
+                search(page)
             }
         }
-        resultnowbutton.setOnClickListener{
-            val pagebuilder = Dialog(requireContext())
-            pagebuilder.setContentView(R.layout.search_page_dialog)
-            pagebuilder.window?.attributes?.width = WindowManager.LayoutParams.MATCH_PARENT
-            val searchspinner: Spinner = pagebuilder.findViewById(R.id.spinner2) as Spinner
-            val pagearray = mutableListOf<Int>()
-            for (i in 1..maxpage){
-                pagearray.add(i)
+        resultprevprevbutton.setOnClickListener{
+            if(page == 1){
+                Toast.makeText(context,"첫번쨰 페이지입니다.",Toast.LENGTH_SHORT).show()
             }
-            val adspinner1 = ArrayAdapter<Int>(requireContext(), android.R.layout.simple_spinner_dropdown_item, pagearray);
-            searchspinner.adapter = adspinner1
-            var dialoginitflag = false
-            searchspinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                    if (dialoginitflag) {
-                        page = pagearray[position]
-                        val callGetSearch = api.getSearch(region, sdate, edate, event, page)
-                        callGetSearch.enqueue(object : Callback<ResultGetSearch> {
-                            override fun onResponse(call: Call<ResultGetSearch>, response: Response<ResultGetSearch>) {
-                                if (response.isSuccessful()) {
-                                    val resData = Gson().toJson(response.body())
-                                    Log.d("TEST", resData)
-                                    resultlist.clear()
-                                    val tempobject = JSONObject(resData).getJSONArray("result")
-                                    for (i in 0 until tempobject.length()) {
-                                        resultlist.add(tempobject.getJSONObject(i).toString())
-                                    }
-                                    // notify adapter
-                                    resultadpater.notifyDataSetChanged()
-                                    resultnowbutton.text = page.toString()
-
-                                } else {
-                                    Log.d("TEST", "사실상 실패")
-                                }
-                            }
-
-                            override fun onFailure(call: Call<ResultGetSearch>, t: Throwable) {
-                                Log.e("TEST", "실패")
-                            }
-                        })
-                        pagebuilder.dismiss()
-                    }
-                    else{
-                        dialoginitflag = !dialoginitflag
-                    }
-                }
-                override fun onNothingSelected(parent: AdapterView<*>?) {
-                }
+            else {
+                page = 1
+                search(page)
             }
-            pagebuilder.show()
+        }
+        resultnextnextbutton.setOnClickListener{
+            if (page == maxpage){
+                Toast.makeText(context,"마지막 페이지입니다.",Toast.LENGTH_SHORT).show()
+            }
+            else{
+                page=maxpage
+                search(page)
+            }
         }
     }
 }

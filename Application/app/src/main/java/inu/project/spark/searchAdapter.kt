@@ -49,6 +49,9 @@ class searchAdapter(list:MutableList<String>) : RecyclerView.Adapter<searchAdapt
             holder.item_region.text = x
             holder.item_body.text = y
             holder.item_date.text = tempdatetime
+            holder.item_all.setOnClickListener {
+
+            }
         }
         catch(e:JSONException){
             e.printStackTrace()
@@ -58,10 +61,12 @@ class searchAdapter(list:MutableList<String>) : RecyclerView.Adapter<searchAdapt
         var item_region:TextView
         var item_body:TextView
         var item_date:TextView
+        var item_all:View
         init{
             item_region = itemView.findViewById<TextView>(R.id.search_item_region)
             item_body = itemView.findViewById<TextView>(R.id.search_item_body)
             item_date = itemView.findViewById<TextView>(R.id.search_item_date)
+            item_all = itemView.findViewById<View>(R.id.search_items)
         }
     }
 }
