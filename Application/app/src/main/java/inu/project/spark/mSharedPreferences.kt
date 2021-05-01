@@ -28,6 +28,9 @@ class mSharedPreferences (context: Context){
     fun setBoolean(key:String, bool:Boolean){
         prefs.edit().putBoolean(key, bool).apply()
     }
+    fun delBoolean(key:String){
+        prefs.edit().remove(key).apply()
+    }
     fun getString(key:String, defValue:String):String{
         return prefs.getString(key,defValue).toString()
     }

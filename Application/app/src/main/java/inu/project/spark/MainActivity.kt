@@ -89,12 +89,13 @@ class MainActivity : AppCompatActivity() {
             startActivity(i)
         }
         // alarm schedule set
+        prefs.delBoolean("alarmflag")
         Log.d("boolean",prefs.getBoolean("alarmflag",false).toString())
         if(!prefs.getBoolean("alarmflag",false)){
             val js = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
             val serviceComponent = ComponentName(this, MyJobService::class.java)
             val celandar = Calendar.getInstance()
-            val minute = (60 - celandar.get(Calendar.MINUTE))*1000*60
+            val minute = (44 - celandar.get(Calendar.MINUTE))*1000*60
             Log.d("minute",minute.toLong().toString())
             val jobInfo = JobInfo.Builder(0, serviceComponent)
                     .setMinimumLatency(minute.toLong())
