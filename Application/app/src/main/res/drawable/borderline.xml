@@ -5,7 +5,6 @@
 
     <!-- 테두리 내부 색상 설정 -->
     <solid android:color="@android:color/white" />
-
     <!-- 테두리 내부 여백 설정 -->
     <padding
         android:bottom="-1dp"

@@ -74,7 +74,7 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
                 //send request that number of message each city to server
                 // if receive json that number of message each city then ping on the map
                 localhash_init()
-                val baseURL = "http://100.26.178.18:3000"
+                val baseURL = MyApplication.baseurl
                 val retrofit = Retrofit.Builder()
                         .baseUrl(baseURL)
                         .addConverterFactory(GsonConverterFactory.create())

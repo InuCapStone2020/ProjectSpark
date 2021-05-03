@@ -42,7 +42,7 @@ class searchFragment : Fragment() {
         //mindate 서버로부터 가져오기
         var minstr:String = "start"
 
-        val baseURL = "http://54.156.38.187:3000"
+        val baseURL = MyApplication.baseurl
         // try catch 설정
         val retrofit = Retrofit.Builder()
             .baseUrl(baseURL)
