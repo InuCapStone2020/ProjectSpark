@@ -22,6 +22,7 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.lang.Exception
+import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -42,7 +43,6 @@ class MyJobService : JobService() {
         Log.d(TAG, "onStartJob: ${params!!.jobId}")
         return false
     }
-
     override fun onStopJob(params: JobParameters?): Boolean {
         Log.d(TAG, "onStartJob: ${params!!.jobId}")
         return false
@@ -66,6 +66,8 @@ class MyJobService1 : JobService(){
     companion object{
         private val TAG = "MyJobService1"
         private val title = "새로운 재난 문자"
+        private var errorCount = 0
+        private val defaulttime = 60
     }
 
     override fun onStartJob(params: JobParameters?): Boolean {
@@ -92,8 +94,8 @@ class MyJobService1 : JobService(){
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
         val api = retrofit.create(spark::class.java)
-        val defaulttime = 60*4
-        val callGetNotice = api.getNotice(locallist,defaulttime)
+
+        val callGetNotice = api.getNotice(locallist,(defaulttime+(defaulttime*errorCount)))
         callGetNotice.enqueue(object: Callback<List<Data>> {
             override fun onResponse(call: Call<List<Data>>, response: Response<List<Data>>) {
                 if(response.isSuccessful()) {
@@ -129,31 +131,139 @@ class MyJobService1 : JobService(){
                                 db?.contactsDao()?.insertAll(contacts)
                             }
                         }
-                        // create pending intent
-                        val resultIntent = Intent(applicationContext,SubActivity::class.java)
-                        resultIntent.putExtra("fragment", R.id.button_main_repository)
-                        val pendingIntent = PendingIntent.getActivity(applicationContext,0,resultIntent,PendingIntent.FLAG_UPDATE_CURRENT)
-                        val text = (size-minusSize).toString() + "건"
-                        val builder = NotificationCompat.Builder(applicationContext,"channal")
-                                .setSmallIcon(R.drawable.ic_notification)
-                                .setContentTitle(title)
-                                .setContentText(text)
-                                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                                .setContentIntent(pendingIntent)
-                                .build()
-                        val notificationManager: NotificationManager =
-                                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                        notificationManager.notify(0,builder)
+                        if(minusSize != size){
+                            val alarmlist = MyApplication.prefs.getalarm()
+                            val calendar = Calendar.getInstance()
+                            val weekdayFormat:SimpleDateFormat = SimpleDateFormat("EE", Locale.getDefault())
+                            val nowWeekDay:String = weekdayFormat.format(calendar.time)
+                            var timeOverlapFlag = false
+                            var weekendOverlapFlag = false
+                            val nowHour = calendar.get(Calendar.HOUR)
+                            val nowMinute = calendar.get(Calendar.MINUTE)
+                            if (alarmlist != null){
+                                for (a in alarmlist){
+                                    weekendOverlapFlag = false
+                                    val tempobj = JSONObject(a)
+                                    val tempweeks = tempobj.getString("week").split(", ")
+                                    if(tempweeks[0] == ""){
+                                        weekendOverlapFlag = true
+                                    }
+                                    else{
+                                        for (w in tempweeks){
+                                            if(nowWeekDay == w){
+                                                weekendOverlapFlag = true
+                                                break
+                                            }
+                                        }
+                                    }
+                                    if (weekendOverlapFlag){
+                                        val startTime = tempobj.getString("start").split(" ")
+                                        var startHour = startTime[1].toInt()
+                                        val startMinute = startTime[2].toInt()
+                                        if(startTime[0] == "오전"){
+                                            if(startHour == 12){
+                                                startHour -= 12
+                                            }
+                                        }
+                                        else{
+                                            if(startHour != 12){
+                                                startHour += 12
+                                            }
+                                        }
+                                        val endTime = tempobj.getString("end").split(" ")
+                                        var endHour = endTime[1].toInt()
+                                        val endMinute = endTime[2].toInt()
+                                        if(endTime[0] == "오전"){
+                                            if(endHour == 12){
+                                                endHour -= 12
+                                            }
+                                        }
+                                        else{
+                                            if(endHour != 12){
+                                                endHour += 12
+                                            }
+                                        }
+                                        if(startHour == endHour){
+                                            if (startMinute == endMinute){
+                                                if(nowHour==startHour && nowMinute==startMinute){
+                                                    timeOverlapFlag = true
+                                                }
+                                            }
+                                            else if (startMinute < endMinute){
+                                                if(nowHour==startHour && nowMinute>=startMinute && nowMinute<=endMinute){
+                                                    timeOverlapFlag = true
+                                                }
+                                            }
+                                            else{
+                                                if(!(nowMinute<=startMinute && nowMinute>=endMinute)){
+                                                    timeOverlapFlag = true
+                                                }
+                                            }
+                                        }
+                                        else if (startHour < endHour){
+                                            if(nowHour == startHour){
+                                                if(nowMinute >= startMinute){
+                                                    timeOverlapFlag = true
+                                                }
+                                            }
+                                            else if(nowHour == endHour){
+                                                if(nowMinute <= endMinute){
+                                                    timeOverlapFlag = true
+                                                }
+                                            }
+                                            else if(nowHour>startHour && nowHour<endHour){
+                                                timeOverlapFlag = true
+                                            }
+                                        }
+                                        else{
+                                            if(nowHour == startHour){
+                                                if(nowMinute <= startMinute){
+                                                    timeOverlapFlag = true
+                                                }
+                                            }
+                                            else if(nowHour == endHour){
+                                                if(nowMinute >= endMinute){
+                                                    timeOverlapFlag = true
+                                                }
+                                            }
+                                            else if(nowHour<startHour && nowHour>endHour){
+                                                timeOverlapFlag = true
+                                            }
+                                        }
+                                        if(timeOverlapFlag){
+                                            break
+                                        }
+                                    }
+                                }
+                            }
+                            if(timeOverlapFlag){
+                                // create pending intent
+                                val resultIntent = Intent(applicationContext,SubActivity::class.java)
+                                resultIntent.putExtra("fragment", R.id.button_main_repository)
+                                val pendingIntent = PendingIntent.getActivity(applicationContext,0,resultIntent,PendingIntent.FLAG_UPDATE_CURRENT)
+                                val text = (size-minusSize).toString() + "건"
+                                val builder = NotificationCompat.Builder(applicationContext,"channal")
+                                    .setSmallIcon(R.drawable.ic_notification)
+                                    .setContentTitle(title)
+                                    .setContentText(text)
+                                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                                    .setContentIntent(pendingIntent)
+                                    .build()
+                                val notificationManager: NotificationManager =
+                                    getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                                notificationManager.notify(0,builder)
+                            }
+                        }
                     }
-
+                    errorCount = 0
                     Log.d("getNotice", "Successful")
                 } else {
-
+                    errorCount++
                     Log.d("getNotice", "notSuccessful")
                 }
             }
             override fun onFailure(call: Call<List<Data>>, t: Throwable) {
-
+                errorCount++
                 Log.e("getNotice", "onFailure")
             }
         })

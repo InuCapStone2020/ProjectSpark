@@ -22,7 +22,7 @@ class alarmFragment : Fragment() {
         val mtoolbar = (activity as SubActivity).findViewById<View>(R.id.toolbar_sub) as Toolbar
         mtoolbar.setNavigationOnClickListener {
             (activity as SubActivity).replaceFragment(fragmentSetting)
-            var title = (activity as SubActivity).findViewById<View>(R.id.toolbar_sub_title) as TextView
+            val title = (activity as SubActivity).findViewById<View>(R.id.toolbar_sub_title) as TextView
             title.setText(R.string.toolbar_setting_name)
         }
         return inflater.inflate(R.layout.alarm_fragment, container, false)
@@ -97,7 +97,7 @@ class alarmFragment : Fragment() {
                 }
             }
             MyApplication.prefs.savealarm(checkedweek,mstart.text.toString(),mend.text.toString())
-            var list = MyApplication.prefs.getalarm()
+            val list = MyApplication.prefs.getalarm()
             if (list != null) {
                 listItems.add(list[list.size-1])
                 adpater.notifyItemInserted(list.size)
@@ -108,7 +108,7 @@ class alarmFragment : Fragment() {
         }
         // radio button save and default set
         val mradio = requireView().findViewById<View>(R.id.radio_alarm) as RadioGroup
-        var radioi = MyApplication.prefs.getInt("alarm_radio",R.id.radio_alarm1)
+        val radioi = MyApplication.prefs.getInt("alarm_radio",R.id.radio_alarm1)
         mradio.check(radioi)
         mradio.setOnCheckedChangeListener{
             rgroup: RadioGroup?, checkedId: Int ->
@@ -117,12 +117,12 @@ class alarmFragment : Fragment() {
     }
 
     private fun textViewtoTimePicker(it:TextView) {
-        var time = Calendar.getInstance()
-        var hour = time.get(Calendar.HOUR)
-        var minute = time.get(Calendar.MINUTE)
+        val time = Calendar.getInstance()
+        val hour = time.get(Calendar.HOUR)
+        val minute = time.get(Calendar.MINUTE)
         var timestring: String = ""
 
-        var timeListener = object : TimePickerDialog.OnTimeSetListener {
+        val timeListener = object : TimePickerDialog.OnTimeSetListener {
             override fun onTimeSet(view: TimePicker?, hourOfDay: Int, minute: Int) {
                 var ampm = "오전"
                 var h = hourOfDay
@@ -139,7 +139,7 @@ class alarmFragment : Fragment() {
                 it.text = timestring
             }
         }
-        var builder = TimePickerDialog(context, android.R.style.Theme_Holo_Dialog_NoActionBar,timeListener, hour, minute, false)
+        val builder = TimePickerDialog(context, android.R.style.Theme_Holo_Dialog_NoActionBar,timeListener, hour, minute, false)
         builder.window!!.setBackgroundDrawableResource(android.R.color.transparent)
         builder.show()
     }

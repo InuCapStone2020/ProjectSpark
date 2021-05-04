@@ -14,7 +14,7 @@ class MyApplication : Application(){
     companion object{
         val baseurl = "http://54.156.38.187:3000"
         lateinit var prefs : mSharedPreferences
-        private val alarmminute = 29
+        private val alarmminute = 22
         private var initflag = true
         var db:AppDatabase? = null
     }
