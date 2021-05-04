@@ -248,10 +248,21 @@ class MyJobService1 : JobService(){
                                     .setContentText(text)
                                     .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                                     .setContentIntent(pendingIntent)
-                                    .build()
+                                val action = MyApplication.prefs.getInt("alarm_radio",0)
+                                if (action == 0 || action == R.id.radio_alarm1 || action == R.id.radio_alarm3){
+                                    builder.setVibrate(longArrayOf(300,0,0,300))
+                                }
+                                if(action == 0 || action == R.id.radio_alarm1 || action == R.id.radio_alarm2){
+
+                                }
+                                if( action == R.id.radio_alarm4){
+                                    builder.setNotificationSilent()
+                                }
+                                
+
                                 val notificationManager: NotificationManager =
                                     getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                                notificationManager.notify(0,builder)
+                                notificationManager.notify(0,builder.build())
                             }
                         }
                     }
