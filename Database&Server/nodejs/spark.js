@@ -14,10 +14,10 @@ app.listen(3000, () => {
 
 //interlock to mysql
 var connection = mysql.createConnection({
-    host: "sparkdb.cs6bwutyplia.us-east-1.rds.amazonaws.com", //end point address
-    user: "spark", //masteruser id
-    database: "spark", //database to access
-    password: "#spark16", //database pw
+    host: "", //end point address
+    user: "", //masteruser id
+    database: "", //database to access
+    password: "", //database pw
     timezone: "KST", //timezone
     port: 3306
 });
