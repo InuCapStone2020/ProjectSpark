@@ -11,13 +11,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import inu.project.spark.AppDatabase
 
 class SubActivity : AppCompatActivity(){
     private val fragmentSetting: settingFragment = settingFragment()
     private val fragmentSearch: searchFragment = searchFragment()
     private val fragmentRepository: repositoryFragment = repositoryFragment()
     private val fragmentMap: mapFragment = mapFragment()
-
+    var db:AppDatabase?=null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sub)

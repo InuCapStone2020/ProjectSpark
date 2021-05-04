@@ -92,7 +92,7 @@ class MyJobService1 : JobService(){
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
         val api = retrofit.create(spark::class.java)
-        val defaulttime = 60
+        val defaulttime = 60*4
         val callGetNotice = api.getNotice(locallist,defaulttime)
         callGetNotice.enqueue(object: Callback<List<Data>> {
             override fun onResponse(call: Call<List<Data>>, response: Response<List<Data>>) {
@@ -103,22 +103,37 @@ class MyJobService1 : JobService(){
                     if (size != 0){
                         Log.d("getNotice",message.toString())
                         // save db in data
-                        val db = AppDatabase.getInstance(applicationContext)
+                        val db = MyApplication.db
+                        var minusSize = 0
                         for (i in 0 until size){
                             val tempobj = arr.getJSONObject(i)
-                            val contacts = Contacts(tempobj.getInt("NUM"),
-                                tempobj.getString("M_DATE"),
-                                tempobj.getString("M_TIME"),
-                                tempobj.getString("REGION"),
-                                tempobj.getString("EVENT"),
-                                tempobj.getString("CONTENT"))
-                            db?.contactsDao()?.insertAll(contacts)
+                            val list = db?.contactsDao()?.getFromNum(tempobj.getInt("NUM"))
+                            var overlapFlag = false
+                            if (list!=null){
+                                for(l in list){
+                                    if(l.SUBNUM == tempobj.getInt("SUBNUM")){
+                                        overlapFlag = true
+                                        minusSize++
+                                        break
+                                    }
+                                }
+                            }
+                            if(!overlapFlag){
+                                val contacts = Contacts(tempobj.getInt("NUM"),
+                                    tempobj.getInt("SUBNUM"),
+                                    tempobj.getString("M_DATE"),
+                                    tempobj.getString("M_TIME"),
+                                    tempobj.getString("REGION"),
+                                    tempobj.getString("EVENT"),
+                                    tempobj.getString("CONTENT"))
+                                db?.contactsDao()?.insertAll(contacts)
+                            }
                         }
                         // create pending intent
                         val resultIntent = Intent(applicationContext,SubActivity::class.java)
                         resultIntent.putExtra("fragment", R.id.button_main_repository)
                         val pendingIntent = PendingIntent.getActivity(applicationContext,0,resultIntent,PendingIntent.FLAG_UPDATE_CURRENT)
-                        val text = size.toString() + "건"
+                        val text = (size-minusSize).toString() + "건"
                         val builder = NotificationCompat.Builder(applicationContext,"channal")
                                 .setSmallIcon(R.drawable.ic_notification)
                                 .setContentTitle(title)

@@ -5,7 +5,9 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+
 
 class repositoryFragment : Fragment() {
     override fun onCreateView(
@@ -18,7 +20,15 @@ class repositoryFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
         val recyclerview = requireView().findViewById<RecyclerView>(R.id.repository_RecyclerView)
         val repoistlist = mutableListOf<Contacts>()
-        val db = AppDatabase.getInstance(requireContext())
 
+        val db = MyApplication.db
+        val savedContacts = db!!.contactsDao().getAll()
+        if(savedContacts.isNotEmpty()){
+            repoistlist.addAll(savedContacts)
+        }
+        val repositadapter = repositoryAdapter(repoistlist)
+        val layoutmanager = LinearLayoutManager(context)
+        recyclerview.layoutManager = layoutmanager
+        recyclerview.adapter = repositadapter
     }
 }
