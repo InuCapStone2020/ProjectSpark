@@ -18,6 +18,7 @@ var connection = mysql.createConnection({
     user: "", //masteruser id
     database: "", //database to access
     password: "", //database pw
+    timezone: "KST", //timezone
     port: 3306
 });
 
@@ -264,8 +265,18 @@ app.get("/notice", (req, res) => {
         var region = req.body.region;
     }
 
+    if (querydata.interval) {
+        var interval = querydata.interval;
+    } else {
+        var interval = req.body.interval;
+    }
+
     if (region == "") {
         region = "전체 전체";
+    }
+
+    if (interval == "") {
+        interval = 60;
     }
 
     if (region != "전체 전체") {
@@ -285,13 +296,13 @@ app.get("/notice", (req, res) => {
         region = mergeRegion;
 
         noticeSQL =
-            "select num, subnum, m_date, m_time, region, content, event from (select *, concat(m_date,' ', m_time) as m_dt from Message_List) as ml_dt where (ml_dt.m_dt > DATE_SUB(now(),INTERVAL 1 hour)) and (region REGEXP ?)";
+            "select num, subnum, m_date, m_time, region, content, event from (select *, concat(m_date,' ', m_time) as m_dt from Message_List) as ml_dt where (ml_dt.m_dt > DATE_SUB(now(),INTERVAL ? minute)) and (region REGEXP ?)";
     } else {
         noticeSQL =
-            "select num, subnum, m_date, m_time, region, content, event from (select *, concat(m_date,' ', m_time) as m_dt from Message_List) as ml_dt where ml_dt.m_dt > DATE_SUB(now(),INTERVAL 1 hour)";
+            "select num, subnum, m_date, m_time, region, content, event from (select *, concat(m_date,' ', m_time) as m_dt from Message_List) as ml_dt where ml_dt.m_dt > DATE_SUB(now(),INTERVAL ? minute)";
     }
 
-    var qs = [region];
+    var qs = [interval, region];
 
     connection.query(noticeSQL, qs, (err, result) => {
         if (err) {
