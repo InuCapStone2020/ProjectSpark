@@ -571,7 +571,7 @@ class searchFragment : Fragment() {
             }
         }
         resultnextbutton.setOnClickListener{
-            if (page == maxpage){
+            if (page >= maxpage){
                 Toast.makeText(context,"마지막 페이지입니다.",Toast.LENGTH_SHORT).show()
             }
             else{
@@ -589,7 +589,7 @@ class searchFragment : Fragment() {
             }
         }
         resultnextnextbutton.setOnClickListener{
-            if (page == maxpage){
+            if (page >= maxpage){
                 Toast.makeText(context,"마지막 페이지입니다.",Toast.LENGTH_SHORT).show()
             }
             else{

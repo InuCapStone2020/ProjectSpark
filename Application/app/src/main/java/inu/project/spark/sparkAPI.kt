@@ -13,7 +13,8 @@ interface spark {
     ): Call<ResultGetSearch>
 
     @GET("/notice")
-    fun getNotice(@Query("region")region:String
+    fun getNotice(@Query("region")region:String,
+                  @Query("interval")interval:Int
     ): Call<List<Data>>
 
 

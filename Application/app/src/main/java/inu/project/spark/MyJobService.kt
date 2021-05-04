@@ -92,8 +92,8 @@ class MyJobService1 : JobService(){
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
         val api = retrofit.create(spark::class.java)
-
-        val callGetNotice = api.getNotice(locallist)
+        val defaulttime = 60
+        val callGetNotice = api.getNotice(locallist,defaulttime)
         callGetNotice.enqueue(object: Callback<List<Data>> {
             override fun onResponse(call: Call<List<Data>>, response: Response<List<Data>>) {
                 if(response.isSuccessful()) {
@@ -103,7 +103,17 @@ class MyJobService1 : JobService(){
                     if (size != 0){
                         Log.d("getNotice",message.toString())
                         // save db in data
-
+                        val db = AppDatabase.getInstance(applicationContext)
+                        for (i in 0 until size){
+                            val tempobj = arr.getJSONObject(i)
+                            val contacts = Contacts(tempobj.getInt("NUM"),
+                                tempobj.getString("M_DATE"),
+                                tempobj.getString("M_TIME"),
+                                tempobj.getString("REGION"),
+                                tempobj.getString("EVENT"),
+                                tempobj.getString("CONTENT"))
+                            db?.contactsDao()?.insertAll(contacts)
+                        }
                         // create pending intent
                         val resultIntent = Intent(applicationContext,SubActivity::class.java)
                         resultIntent.putExtra("fragment", R.id.button_main_repository)

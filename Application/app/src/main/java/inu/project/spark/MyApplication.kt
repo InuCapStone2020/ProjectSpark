@@ -14,19 +14,23 @@ class MyApplication : Application(){
         val baseurl = "http://54.156.38.187:3000"
         lateinit var prefs : mSharedPreferences
         private val alarmminute = 15
+        private val initflag = true
     }
     override fun onCreate(){
         prefs = mSharedPreferences(applicationContext)
         // alarm schedule set
-        //prefs.delBoolean("alarmflag")
-        Log.d("boolean",prefs.getBoolean("alarmflag",false).toString())
+        if (initflag){
+            prefs.delBoolean("alarmflag")
+        }
         if(!prefs.getBoolean("alarmflag",false)){
+            //db
+
+            //jobscheduler
             val js = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
             val serviceComponent = ComponentName(this, MyJobService::class.java)
             js.cancelAll()
             val celandar = Calendar.getInstance()
             val minute = ((60 + alarmminute - celandar.get(Calendar.MINUTE))%60)*1000*60
-            Log.d("minute",minute.toLong().toString())
             val jobInfo = JobInfo.Builder(0, serviceComponent)
                     .setMinimumLatency(minute.toLong())
                     .setOverrideDeadline(minute.toLong())
