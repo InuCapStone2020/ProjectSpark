@@ -44,11 +44,11 @@ class alarmAdapter(list:MutableList<String>) : RecyclerView.Adapter<alarmAdapter
     inner class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView){
         var textView1:TextView
         var textView2:TextView
-        var button1:Button
+        var button1:TextView
         init{
             textView1 = itemView.findViewById<TextView>(R.id.alarm_item1)
             textView2 = itemView.findViewById<TextView>(R.id.alarm_item2)
-            button1 = itemView.findViewById<Button>(R.id.alarm_delete)
+            button1 = itemView.findViewById<TextView>(R.id.alarm_delete)
             button1.setOnClickListener{
                 var position = adapterPosition
                 remove(position)

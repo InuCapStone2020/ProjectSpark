@@ -46,20 +46,15 @@
                     android:text="요일"
                     android:textColor="@color/black" />
 
-                <Button
+                <TextView
                     android:id="@+id/add_cancel_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="0"
                     android:background="@drawable/borderline"
-                    android:minWidth="0dip"
-                    android:minHeight="0dip"
-                    android:paddingLeft="0dp"
-                    android:paddingTop="0dp"
-                    android:paddingRight="0dp"
-                    android:paddingBottom="0dp"
-                    android:text="x"
-                    app:iconPadding="0dp" />
+                    android:text="  X  "
+                    android:textColor="@color/black" />
+
             </LinearLayout>
 
             <LinearLayout

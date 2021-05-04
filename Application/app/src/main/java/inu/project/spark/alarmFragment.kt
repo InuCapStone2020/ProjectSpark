@@ -64,7 +64,7 @@ class alarmFragment : Fragment() {
             maddlayout.visibility = View.GONE
         }
 
-        val mcancel = requireView().findViewById<View>(R.id.add_cancel_button) as Button
+        val mcancel = requireView().findViewById<View>(R.id.add_cancel_button)
         mcancel.setOnClickListener{
             exitaddalarm()
         }
@@ -96,15 +96,20 @@ class alarmFragment : Fragment() {
                     }
                 }
             }
-            MyApplication.prefs.savealarm(checkedweek,mstart.text.toString(),mend.text.toString())
-            val list = MyApplication.prefs.getalarm()
-            if (list != null) {
-                listItems.add(list[list.size-1])
-                adpater.notifyItemInserted(list.size)
-                adpater.notifyItemRangeChanged(0,list.size)
-                mrecycle.visibility = View.VISIBLE
+            if(mstart.text.toString() == "오전 00시 00분" || mend.text.toString() == "오전 00시 00분"){
+                Toast.makeText(context,"시간설정을 해주세요",Toast.LENGTH_SHORT).show()
             }
-            exitaddalarm()
+            else{
+                MyApplication.prefs.savealarm(checkedweek,mstart.text.toString(),mend.text.toString())
+                val list = MyApplication.prefs.getalarm()
+                if (list != null) {
+                    listItems.add(list[list.size-1])
+                    adpater.notifyItemInserted(list.size)
+                    adpater.notifyItemRangeChanged(0,list.size)
+                    mrecycle.visibility = View.VISIBLE
+                }
+                exitaddalarm()
+            }
         }
         // radio button save and default set
         val mradio = requireView().findViewById<View>(R.id.radio_alarm) as RadioGroup
