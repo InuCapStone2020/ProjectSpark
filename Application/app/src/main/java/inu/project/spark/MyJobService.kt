@@ -55,6 +55,8 @@ class MyJobService : JobService() {
             val channel = NotificationChannel("channal", name, importance).apply {
                 description = descriptionText
             }
+            channel.enableVibration(true)
+            channel.vibrationPattern =  longArrayOf(300,0,0,300)
             // Register the channel with the system
             val notificationManager: NotificationManager =
                     getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -133,6 +135,7 @@ class MyJobService1 : JobService(){
                         }
                         if(minusSize != size){
                             val alarmlist = MyApplication.prefs.getalarm()
+                            Log.d("MyjobSerivce1",alarmlist.toString())
                             val calendar = Calendar.getInstance()
                             val weekdayFormat:SimpleDateFormat = SimpleDateFormat("EE", Locale.getDefault())
                             val nowWeekDay:String = weekdayFormat.format(calendar.time)
@@ -236,7 +239,7 @@ class MyJobService1 : JobService(){
                                     }
                                 }
                             }
-                            if(timeOverlapFlag){
+                            if(!timeOverlapFlag){
                                 // create pending intent
                                 val resultIntent = Intent(applicationContext,SubActivity::class.java)
                                 resultIntent.putExtra("fragment", R.id.button_main_repository)
@@ -258,7 +261,7 @@ class MyJobService1 : JobService(){
                                 if( action == R.id.radio_alarm4){
                                     builder.setNotificationSilent()
                                 }
-                                
+
 
                                 val notificationManager: NotificationManager =
                                     getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
