@@ -1,5 +1,6 @@
 package inu.project.spark
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -14,6 +15,7 @@ class repositoryFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        
         return inflater.inflate(R.layout.repository_fragment, container, false)
     }
     override fun onActivityCreated(savedInstanceState: Bundle?) {

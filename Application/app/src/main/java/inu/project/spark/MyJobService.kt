@@ -10,6 +10,8 @@ import android.app.job.JobService
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.media.AudioAttributes
+import android.media.RingtoneManager
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -55,8 +57,12 @@ class MyJobService : JobService() {
             val channel = NotificationChannel("channal", name, importance).apply {
                 description = descriptionText
             }
+            val audioattribute = AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .build()
             channel.enableVibration(true)
             channel.vibrationPattern =  longArrayOf(300,0,0,300)
+            channel.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION),audioattribute)
             // Register the channel with the system
             val notificationManager: NotificationManager =
                     getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -96,7 +102,7 @@ class MyJobService1 : JobService(){
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
         val api = retrofit.create(spark::class.java)
-
+        Log.d("Myjobservice",locallist)
         val callGetNotice = api.getNotice(locallist,(defaulttime+(defaulttime*errorCount)))
         callGetNotice.enqueue(object: Callback<List<Data>> {
             override fun onResponse(call: Call<List<Data>>, response: Response<List<Data>>) {
@@ -246,17 +252,18 @@ class MyJobService1 : JobService(){
                                 val pendingIntent = PendingIntent.getActivity(applicationContext,0,resultIntent,PendingIntent.FLAG_UPDATE_CURRENT)
                                 val text = (size-minusSize).toString() + "건"
                                 val builder = NotificationCompat.Builder(applicationContext,"channal")
-                                    .setSmallIcon(R.drawable.ic_notification)
-                                    .setContentTitle(title)
-                                    .setContentText(text)
-                                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                                    .setContentIntent(pendingIntent)
+                                        .setSmallIcon(R.drawable.ic_notification)
+                                        .setContentTitle(title)
+                                        .setContentText(text)
+                                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                                        .setAutoCancel(true)
+                                        .setContentIntent(pendingIntent)
                                 val action = MyApplication.prefs.getInt("alarm_radio",0)
                                 if (action == 0 || action == R.id.radio_alarm1 || action == R.id.radio_alarm3){
                                     builder.setVibrate(longArrayOf(300,0,0,300))
                                 }
                                 if(action == 0 || action == R.id.radio_alarm1 || action == R.id.radio_alarm2){
-
+                                    builder.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
                                 }
                                 if( action == R.id.radio_alarm4){
                                     builder.setNotificationSilent()
