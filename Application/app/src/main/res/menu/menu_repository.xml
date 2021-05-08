@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menu_repository_all"
+        android:title="모두 삭제" />
+    <item
+        android:id="@+id/menu_repository_select"
+        android:title="선택 삭제" />
+</menu>

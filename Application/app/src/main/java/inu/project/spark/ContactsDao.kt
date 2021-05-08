@@ -17,4 +17,6 @@ interface ContactsDao {
     @Delete
     fun delete(contacts: Contacts)
 
+    @Query("DELETE FROM tb_contacts")
+    fun deleteAll()
 }
