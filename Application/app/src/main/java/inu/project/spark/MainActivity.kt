@@ -1,38 +1,38 @@
 package inu.project.spark
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.job.JobInfo
-import android.app.job.JobScheduler
-import android.content.ComponentName
-import android.content.Context
+
 import android.content.DialogInterface
 import android.content.Intent
-import android.content.pm.PackageInfo
-import android.content.pm.PackageManager
-import android.graphics.Color
-import android.os.Build
 import android.os.Bundle
-import android.util.Base64
-import android.util.Log
 import android.view.View
-import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityCompat
-import inu.project.spark.MyApplication.Companion.prefs
-import java.security.MessageDigest
-import java.security.NoSuchAlgorithmException
 import java.util.*
-import java.util.concurrent.TimeUnit
-import kotlin.time.ExperimentalTime
-import kotlin.time.minutes
+
 
 
 class MainActivity : AppCompatActivity() {
-    private var notificationManager: NotificationManager? = null
+
+    override fun onBackPressed() {
+        AlertDialog.Builder(this@MainActivity)
+                .setTitle("close")
+                .setMessage("종료하시겠습니까?")
+                .setPositiveButton(
+                        "네",
+                        DialogInterface.OnClickListener() { dialogInterface: DialogInterface, i: Int ->
+                            ActivityCompat.finishAffinity(this@MainActivity)
+                            System.exit(0)
+                        }
+                )
+                .setNegativeButton(
+                        "아니오",
+                        DialogInterface.OnClickListener() { dialogInterface: DialogInterface, i: Int ->
+                        })
+                .show()
+        //super.onBackPressed()
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)

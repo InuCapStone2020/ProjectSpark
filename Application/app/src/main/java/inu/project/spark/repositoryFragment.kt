@@ -88,4 +88,9 @@ class repositoryFragment : Fragment() {
         recyclerview.adapter = repositadapter
     }
 
+    override fun onPause() {
+        repositadapter.setDeleteFlag(false)
+        super.onPause()
+    }
+
 }
