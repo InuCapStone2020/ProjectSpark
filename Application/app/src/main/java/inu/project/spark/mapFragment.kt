@@ -1,6 +1,7 @@
 package inu.project.spark
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.LocationManager
@@ -43,7 +44,9 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
     private val PERMISSIONS_REQUEST_CODE = 100
     private var displayFlag = false
     private var markerFlag = false
+    private var searchFlag = false
     private val localhash = hashMapOf<String,Triple<Int,Double,Double>>()
+    private val poiarr = mutableListOf<MapPOIItem>()
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         val mapView = MapView(activity)
@@ -88,7 +91,7 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
                             Log.d("weekcountrequest", "Successful")
 
                             localhash_update(resData)
-                            val poiarr = mutableListOf<MapPOIItem>()
+                            poiarr.clear()
                             for (l in localhash){
                                 if(l.value.first == 0){
                                     continue
@@ -105,7 +108,9 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
                                 else if (tempstr[1] == "전체"){
                                     point = MapPoint.mapPointWithGeoCoord(l.value.second,l.value.third)
                                     marker0.mapPoint = point
+                                    marker0.tag = 2
                                     poiarr.add(marker0)
+                                    mapView.selectPOIItem(marker0,false)
                                 }
                                 else{
                                     point = MapPoint.mapPointWithGeoCoord(l.value.second,l.value.third)
@@ -113,8 +118,22 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
                                     poiarr.add(marker0)
                                 }
                             }
-                            mapView.addPOIItems(poiarr.toTypedArray())
-
+                            val tempPoint = mutableListOf<MapPOIItem>()
+                            if(mapView.zoomLevel < 7){
+                                for(p in poiarr){
+                                    if(p.tag == 0){
+                                        tempPoint.add(p)
+                                    }
+                                }
+                            }
+                            else{
+                                for(p in poiarr){
+                                    if(p.tag == 2){
+                                        tempPoint.add(p)
+                                    }
+                                }
+                            }
+                            mapView.addPOIItems(tempPoint.toTypedArray())
                         } else {
                             Log.d("weekcountrequest", "notSuccessful")
                         }
@@ -136,6 +155,10 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
         val searchmapbutton = requireView().findViewById<View>(R.id.search_map_button)
         val nextmapbutton = requireView().findViewById<View>(R.id.next_map_button)
         val localsearchbutton = requireView().findViewById<View>(R.id.localsearch_map_button)
+        localsearchbutton.setOnClickListener {
+            searchFlag = true
+            (activity as SubActivity).replaceFragment(mapsearchFragment())
+        }
         searchmapbutton.setOnClickListener{
             // inactive button
             viewmapbutton.visibility = View.INVISIBLE
@@ -192,8 +215,11 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
     }
 
     override fun onStop() {
+        if(!searchFlag){
+            mapViewContainer.removeAllViews()
+        }
         super.onStop()
-        mapViewContainer.removeAllViews()
+
     }
     fun checkLocationServicesStatus():Boolean {
         val locationManager: LocationManager = requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -328,7 +354,33 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
     }
 
     override fun onMapViewZoomLevelChanged(p0: MapView?, p1: Int) {
-
+        Log.d("zoomlevelchange",p1.toString())
+        if(displayFlag){
+            if(p1 < 7){
+                if(p0!!.findPOIItemByTag(0)==null){
+                    val tempPoint = mutableListOf<MapPOIItem>()
+                    for(p in poiarr){
+                        if(p.tag == 0){
+                            tempPoint.add(p)
+                        }
+                    }
+                    p0.removeAllPOIItems()
+                    p0.addPOIItems(tempPoint.toTypedArray())
+                }
+            }
+            else{
+                if(p0!!.findPOIItemByTag(2)==null){
+                    val tempPoint = mutableListOf<MapPOIItem>()
+                    for(p in poiarr){
+                        if(p.tag == 2){
+                            tempPoint.add(p)
+                        }
+                    }
+                    p0.removeAllPOIItems()
+                    p0.addPOIItems(tempPoint.toTypedArray())
+                }
+            }
+        }
     }
 
     override fun onMapViewSingleTapped(p0: MapView?, p1: MapPoint?) {
