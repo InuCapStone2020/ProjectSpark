@@ -29,6 +29,10 @@ class repositoryFragment : Fragment() {
     ): View? {
         val mtoolbar = (activity as SubActivity).findViewById<View>(R.id.toolbar_sub) as Toolbar
         mtoolbar.inflateMenu(R.menu.menu_repository)
+        mtoolbar.setNavigationOnClickListener {
+            val i = Intent(context, MainActivity::class.java)
+            startActivity(i)
+        }
         mtoolbar.setOnMenuItemClickListener {
             when(it.itemId){
                 R.id.menu_repository_all->{ // 전체 삭제
@@ -90,7 +94,9 @@ class repositoryFragment : Fragment() {
 
     override fun onPause() {
         repositadapter.setDeleteFlag(false)
+        Log.d("onstop","repoist")
+        val mtoolbar = (activity as SubActivity).findViewById<View>(R.id.toolbar_sub) as Toolbar
+        mtoolbar.menu.clear()
         super.onPause()
     }
-
 }

@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.widget.Toolbar
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -14,6 +15,21 @@ import java.util.*
 
 
 class alarmFragment : Fragment() {
+    private lateinit var callback: OnBackPressedCallback
+    override fun onStart() {
+        val fragmentSetting: settingFragment = settingFragment()
+        callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                (activity as SubActivity).replaceFragment(fragmentSetting)
+            }
+        }
+        requireActivity().onBackPressedDispatcher.addCallback(this, callback)
+        super.onStart()
+    }
+    override fun onStop() {
+        callback.remove()
+        super.onStop()
+    }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?

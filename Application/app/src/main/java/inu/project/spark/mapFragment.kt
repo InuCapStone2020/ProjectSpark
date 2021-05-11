@@ -3,6 +3,7 @@ package inu.project.spark
 import android.Manifest
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.os.Bundle
@@ -11,11 +12,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.get
 import androidx.fragment.app.Fragment
 import com.google.gson.Gson
+import net.daum.android.map.coord.MapCoord
 import net.daum.mf.map.api.MapPOIItem
 import net.daum.mf.map.api.MapPoint
 import net.daum.mf.map.api.MapView
@@ -29,11 +32,16 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 
 class mapFragment : Fragment(),MapView.MapViewEventListener {
+
     override fun onCreateView(
             inflater: LayoutInflater, container: ViewGroup?,
             savedInstanceState: Bundle?
     ): View? {
-
+        val mtoolbar = (activity as SubActivity).findViewById<View>(R.id.toolbar_sub) as Toolbar
+        mtoolbar.setNavigationOnClickListener {
+            val i = Intent(context, MainActivity::class.java)
+            startActivity(i)
+        }
         return inflater.inflate(R.layout.map_fragment, container, false)
     }
 
@@ -45,10 +53,20 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
     private var displayFlag = false
     private var markerFlag = false
     private var searchFlag = false
+    private var searchedLogitude:Double = 0.0
+    private var searchedLatitude:Double = 0.0
     private val localhash = hashMapOf<String,Triple<Int,Double,Double>>()
     private val poiarr = mutableListOf<MapPOIItem>()
+
+    fun changeSearchedCord(logitude:Double,latitude:Double){
+        searchedLogitude = logitude
+        searchedLatitude = latitude
+        Log.d("changeSearchedCord",searchedLogitude.toString() + "/"+ searchedLatitude.toString())
+    }
+
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+
         val mapView = MapView(activity)
         mapViewContainer = requireView().findViewById<View>(R.id.map_view) as ViewGroup
         mapViewContainer.addView(mapView)
@@ -157,7 +175,36 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
         val localsearchbutton = requireView().findViewById<View>(R.id.localsearch_map_button)
         localsearchbutton.setOnClickListener {
             searchFlag = true
-            (activity as SubActivity).replaceFragment(mapsearchFragment())
+            val marker1 = mapView.findPOIItemByTag(1)
+            searchedLatitude = marker1.mapPoint.mapPointGeoCoord.latitude.toDouble()
+            searchedLogitude = marker1.mapPoint.mapPointGeoCoord.longitude.toDouble()
+            (activity as SubActivity).supportFragmentManager.beginTransaction().replace(R.id.frameLayout,mapsearchFragment()).addToBackStack("map").commit()
+        }
+        if(searchFlag){
+            // inactive button
+            viewmapbutton.visibility = View.INVISIBLE
+            searchmapbutton.visibility = View.INVISIBLE
+            // if displayflag is true then inactive this function
+            if (displayFlag){
+                mapView.removeAllPOIItems()
+                displayFlag = !displayFlag
+            }
+            // active button
+            markerFlag = true
+            requireView().findViewById<View>(R.id.search_map_text).visibility = View.VISIBLE
+            nextmapbutton.visibility = View.VISIBLE
+            localsearchbutton.visibility = View.VISIBLE
+            // active function
+            val marker1 = MapPOIItem()
+            marker1.itemName = ""
+            marker1.tag = 1
+            val mappoint = MapPoint.mapPointWithGeoCoord(searchedLatitude,searchedLogitude)
+            marker1.mapPoint =mappoint
+            marker1.markerType = MapPOIItem.MarkerType.BluePin
+            marker1.isDraggable = true
+            mapView.addPOIItem(marker1)
+            mapView.setMapCenterPoint(mappoint,true)
+
         }
         searchmapbutton.setOnClickListener{
             // inactive button
@@ -194,6 +241,7 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
 
     }
 
+
     fun checkRunTimePermission():Boolean{
         val hasFineLocationPermission:Int = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
         val hasCoarseLocationPermission:Int = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION)
@@ -212,6 +260,10 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
             }
         }
         return false
+    }
+
+    override fun onStart() {
+        super.onStart()
     }
 
     override fun onStop() {

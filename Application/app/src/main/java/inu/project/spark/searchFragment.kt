@@ -3,6 +3,7 @@ package inu.project.spark
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.app.Dialog
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
@@ -14,6 +15,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.*
+import androidx.appcompat.widget.Toolbar
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.Gson
@@ -30,7 +32,11 @@ import java.util.concurrent.Phaser
 class searchFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        // Inflate the layout for this fragment
+        val mtoolbar = (activity as SubActivity).findViewById<View>(R.id.toolbar_sub) as Toolbar
+        mtoolbar.setNavigationOnClickListener {
+            val i = Intent(context, MainActivity::class.java)
+            startActivity(i)
+        }
         return inflater.inflate(R.layout.search_fragment, container, false)
     }
     override fun onActivityCreated(savedInstanceState: Bundle?) {
