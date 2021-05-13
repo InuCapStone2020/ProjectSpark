@@ -66,6 +66,12 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
     private val poiarr = mutableListOf<MapPOIItem>()
     private lateinit var POIitemListener:MarkerEventListener
 
+    fun setSearchFlag(b:Boolean){
+        this.searchFlag = b
+    }
+    fun getSearchFlag():Boolean{
+        return searchFlag
+    }
 
     fun changeSearchedCord(logitude:Double,latitude:Double){
         searchedLogitude = logitude

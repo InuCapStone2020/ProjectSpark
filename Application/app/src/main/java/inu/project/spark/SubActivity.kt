@@ -25,7 +25,11 @@ class SubActivity : AppCompatActivity(){
         fragmentMap.changeSearchedCord(logititude,latitude)
     }
     private lateinit var callback: OnBackPressedCallback
-
+    private fun initMapFragment(){
+        if(fragmentMap.getSearchFlag()){
+            fragmentMap.setSearchFlag(false)
+        }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sub)
@@ -82,11 +86,13 @@ class SubActivity : AppCompatActivity(){
                     menutext.setText(R.string.toolbar_map_name)
                 }
                 R.id.searchItem -> {
+                    initMapFragment()
                     replaceFragment(fragmentSearch)
                     //supportFragmentManager.beginTransaction().replace(R.id.frameLayout, fragmentSearch).commit()
                     menutext.setText(R.string.toolbar_search_name)
                 }
                 R.id.settingItem -> {
+                    initMapFragment()
                     replaceFragment(fragmentSetting)
                     menutext.setText(R.string.toolbar_setting_name)
                 }
