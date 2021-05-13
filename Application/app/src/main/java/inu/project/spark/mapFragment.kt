@@ -510,7 +510,7 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
                     Log.d("onCalloutBalloonOfPOIItemTouched + p2","true")
                     val builder = Dialog(c)
                     builder.setContentView(R.layout.search_local_dialog)
-                    builder.setTitle(p1.itemName)
+                    builder.setTitle(p1.itemName.toString())
                     builder.window?.attributes?.width = WindowManager.LayoutParams.MATCH_PARENT
                     builder.findViewById<View>(R.id.searchdialog_add_button).visibility = View.GONE
                     builder.findViewById<View>(R.id.searchdialog_ok_button).visibility = View.GONE

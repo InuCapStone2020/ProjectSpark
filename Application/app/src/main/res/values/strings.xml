@@ -7,5 +7,6 @@
     <string name="toolbar_search_name">검 색</string>
     <string name="toolbar_alarm_name">알 림  설 정</string>
     <string name="toolbar_local_name">지 역  설 정</string>
+    <string name="rest_api_key">KakaoAK b89cec3d703a039ba0f34d2cb95448d6</string>
 
 </resources>

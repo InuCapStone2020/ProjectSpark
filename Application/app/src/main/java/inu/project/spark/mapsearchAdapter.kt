@@ -13,8 +13,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import kotlin.coroutines.coroutineContext
 
-class mapsearchAdapter (list:List<Address>) : RecyclerView.Adapter<mapsearchAdapter.MyViewHolder>() {
-    private var List:List<Address> = list
+class mapsearchAdapter (list:List<document>) : RecyclerView.Adapter<mapsearchAdapter.MyViewHolder>() {
+    private var List:List<document> = list
     private var mListener:OnItemClickListener? = null
     interface OnItemClickListener {
         fun onItemClick(text:String,longitude: Double,latitude: Double)
@@ -33,9 +33,9 @@ class mapsearchAdapter (list:List<Address>) : RecyclerView.Adapter<mapsearchAdap
     }
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
-        holder.latitude = List[position].latitude
-        holder.longitude = List[position].longitude
-        holder.textView.text = List[position].getAddressLine(0).toString()
+        holder.latitude = List[position].y.toDouble()
+        holder.longitude = List[position].x.toDouble()
+        holder.textView.text = List[position].address_name
     }
 
     inner class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView){

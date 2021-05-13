@@ -2,6 +2,7 @@ package inu.project.spark
 
 import retrofit2.Call
 import retrofit2.http.*
+import java.util.*
 
 interface spark {
     @GET("/search")
@@ -28,4 +29,5 @@ interface spark {
 
     @GET("/mindate")
     fun getMindate(): Call<List<mindate>>
+
 }

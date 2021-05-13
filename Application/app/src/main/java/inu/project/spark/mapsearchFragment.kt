@@ -16,6 +16,11 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.widget.Toolbar
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.io.IOException
 import java.util.*
 
@@ -50,7 +55,7 @@ class mapsearchFragment : Fragment() {
         val searchMapButton = requireView().findViewById<View>(R.id.map_search_button)
         val mapSearchText = requireView().findViewById<View>(R.id.map_search_text) as TextView
         val recycler = requireView().findViewById<View>(R.id.map_search_recycler) as RecyclerView
-        val addresses:MutableList<Address> = mutableListOf()
+        val addresses:MutableList<document> = mutableListOf()
         val mapsearchadapter = mapsearchAdapter(addresses)
 
         mapsearchadapter.setOnItemClickListner(object:mapsearchAdapter.OnItemClickListener{
@@ -73,21 +78,31 @@ class mapsearchFragment : Fragment() {
         recycler.adapter = mapsearchadapter
         searchMapButton.setOnClickListener {
             val searchstr = mapSearchText.text.toString()
-            val geocoder: Geocoder = Geocoder(context, Locale.getDefault())
+            val retrofit = Retrofit.Builder()
+                    .baseUrl("https://dapi.kakao.com")
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build()
+            val api = retrofit.create(mapAPI::class.java)
+            api.getSearchAddress(getString(R.string.rest_api_key),searchstr,15).enqueue(object : Callback<addressResponse>{
+                override fun onResponse(call: Call<addressResponse>, response: Response<addressResponse>) {
+                    Log.d("getSearchAddress",response.body().toString())
+                    if(response.isSuccessful()){
 
-            try {
-                addresses.clear()
-                addresses.addAll(geocoder.getFromLocationName(searchstr,100))
-            } catch (ioException: IOException) {
-                //네트워크 문제
-                Toast.makeText(context, "지오코더 서비스 사용불가", Toast.LENGTH_LONG).show()
-            } catch (illegalArgumentException:IllegalArgumentException) {
-                Toast.makeText(context, "잘못된 주소", Toast.LENGTH_LONG).show()
-            }
-            if (addresses.size == 0) {
-                Toast.makeText(context, "주소 미발견", Toast.LENGTH_LONG).show()
-            }
-            mapsearchadapter.notifyDataSetChanged()
+                        addresses.clear()
+                        addresses.addAll(response.body()!!.document!!)
+                        mapsearchadapter.notifyDataSetChanged()
+                        Log.d("getSearchAddress","success")
+                    }
+                    else{
+                        Log.d("getSearchAddress",response.body().toString())
+                    }
+                }
+                override fun onFailure(call: Call<addressResponse>, t: Throwable) {
+
+                }
+
+            })
+
         }
 
     }
