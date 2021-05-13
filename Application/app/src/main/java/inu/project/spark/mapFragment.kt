@@ -2,6 +2,7 @@ package inu.project.spark
 
 import android.Manifest
 import android.app.Activity
+import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -11,24 +12,30 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.get
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.Gson
 import net.daum.android.map.coord.MapCoord
+import net.daum.mf.map.api.CalloutBalloonAdapter
 import net.daum.mf.map.api.MapPOIItem
 import net.daum.mf.map.api.MapPoint
 import net.daum.mf.map.api.MapView
 import org.json.JSONArray
 import org.json.JSONException
+import org.json.JSONObject
 import retrofit2.Retrofit
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.converter.gson.GsonConverterFactory
+import kotlin.reflect.typeOf
 
 
 class mapFragment : Fragment(),MapView.MapViewEventListener {
@@ -57,6 +64,8 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
     private var searchedLatitude:Double = 0.0
     private val localhash = hashMapOf<String,Triple<Int,Double,Double>>()
     private val poiarr = mutableListOf<MapPOIItem>()
+    private lateinit var POIitemListener:MarkerEventListener
+
 
     fun changeSearchedCord(logitude:Double,latitude:Double){
         searchedLogitude = logitude
@@ -72,7 +81,20 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
         mapViewContainer.addView(mapView)
         val nowmapbutton = requireView().findViewById<View>(R.id.map_now_button)
         mapView.setMapViewEventListener(this)
+        mapView.setCalloutBalloonAdapter(object:CalloutBalloonAdapter{
+            override fun getCalloutBalloon(p0: MapPOIItem?): View? {
+                Log.d("getCalloutBallon","true")
+                return null
+            }
 
+            override fun getPressedCalloutBalloon(p0: MapPOIItem?): View? {
+                Log.d("getPressedCalloutBallon","true")
+                return null
+            }
+
+        })
+        POIitemListener = MarkerEventListener(requireContext())
+        mapView.setPOIItemEventListener(POIitemListener)
         nowmapbutton.setOnClickListener{
             // service and permission check function
             if(!checkLocationServicesStatus()){
@@ -119,6 +141,7 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
                                 marker0.itemName = l.key + " : " + l.value.first.toString() + "건"
                                 marker0.tag = 0
                                 marker0.markerType = MapPOIItem.MarkerType.RedPin
+
                                 val tempstr = l.key.split(" ")
                                 if (tempstr[0] == "전체"){
                                     continue
@@ -260,10 +283,6 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
             }
         }
         return false
-    }
-
-    override fun onStart() {
-        super.onStart()
     }
 
     override fun onStop() {
@@ -473,5 +492,69 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
 
     override fun onMapViewMoveFinished(p0: MapView?, p1: MapPoint?) {
 
+    }
+
+    class MarkerEventListener(context:Context):MapView.POIItemEventListener{
+        private val c = context
+        override fun onPOIItemSelected(p0: MapView?, p1: MapPOIItem?) {
+
+        }
+
+        override fun onCalloutBalloonOfPOIItemTouched(p0: MapView?, p1: MapPOIItem?) {
+
+        }
+
+        override fun onCalloutBalloonOfPOIItemTouched(p0: MapView?, p1: MapPOIItem?, p2: MapPOIItem.CalloutBalloonButtonType?) {
+            if(p1!=null){
+                if(p1.tag == 0 || p1.tag == 2){
+                    Log.d("onCalloutBalloonOfPOIItemTouched + p2","true")
+                    val builder = Dialog(c)
+                    builder.setContentView(R.layout.search_local_dialog)
+                    builder.setTitle(p1.itemName)
+                    builder.window?.attributes?.width = WindowManager.LayoutParams.MATCH_PARENT
+                    builder.findViewById<View>(R.id.searchdialog_add_button).visibility = View.GONE
+                    builder.findViewById<View>(R.id.searchdialog_ok_button).visibility = View.GONE
+                    val recycler = builder.findViewById<RecyclerView>(R.id.searchdialog_recyclerview)
+                    val list = mutableListOf<String>()
+                    val retrofit = Retrofit.Builder()
+                            .baseUrl(MyApplication.baseurl)
+                            .addConverterFactory(GsonConverterFactory.create())
+                            .build()
+                    val adapter = searchAdapter(list)
+                    recycler.adapter = adapter
+                    recycler.layoutManager = LinearLayoutManager(c)
+                    val api = retrofit.create(spark::class.java)
+                    val getWeekDetail = api.getWeekDetail(p1.itemName.split(" : ")[0])
+                    getWeekDetail.enqueue(object: Callback<List<Data>> {
+                        override fun onResponse(call: Call<List<Data>>, response: Response<List<Data>>) {
+                            if(response.isSuccessful()) {
+                                val resData =  Gson().toJson(response.body())
+                                list.clear()
+                                val tempobject = JSONArray(resData)
+                                for (i in 0 until tempobject.length()){
+                                    list.add(tempobject.getJSONObject(i).toString())
+                                }
+                                adapter.notifyDataSetChanged()
+
+                                Log.d("getWeekDetail", "Successful")
+                            } else {
+
+                                Log.d("getWeekDetail", "notSuccessful")
+                            }
+                        }
+                        override fun onFailure(call: Call<List<Data>>, t: Throwable) {
+
+                            Log.e("getWeekDetail", "onFailure")
+                        }
+                    })
+                    builder.show()
+                    //Toast.makeText(c,p1.itemName,Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        override fun onDraggablePOIItemMoved(p0: MapView?, p1: MapPOIItem?, p2: MapPoint?) {
+
+        }
     }
 }
