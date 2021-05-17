@@ -1,7 +1,6 @@
 package inu.project.spark
 
 import android.Manifest
-import android.app.Activity
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
@@ -13,6 +12,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.widget.SeekBar
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityCompat
@@ -22,20 +23,17 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.Gson
-import net.daum.android.map.coord.MapCoord
-import net.daum.mf.map.api.CalloutBalloonAdapter
-import net.daum.mf.map.api.MapPOIItem
-import net.daum.mf.map.api.MapPoint
-import net.daum.mf.map.api.MapView
+import net.daum.mf.map.api.*
+import okhttp3.*
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
-import retrofit2.Retrofit
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import kotlin.reflect.typeOf
+import java.io.IOException
 
 
 class mapFragment : Fragment(),MapView.MapViewEventListener {
@@ -62,21 +60,21 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
     private var searchFlag = false
     private var searchedLogitude:Double = 0.0
     private var searchedLatitude:Double = 0.0
-    private val localhash = hashMapOf<String,Triple<Int,Double,Double>>()
+    private val localhash = hashMapOf<String, Triple<Int, Double, Double>>()
     private val poiarr = mutableListOf<MapPOIItem>()
     private lateinit var POIitemListener:MarkerEventListener
 
-    fun setSearchFlag(b:Boolean){
+    fun setSearchFlag(b: Boolean){
         this.searchFlag = b
     }
     fun getSearchFlag():Boolean{
         return searchFlag
     }
 
-    fun changeSearchedCord(logitude:Double,latitude:Double){
+    fun changeSearchedCord(logitude: Double, latitude: Double){
         searchedLogitude = logitude
         searchedLatitude = latitude
-        Log.d("changeSearchedCord",searchedLogitude.toString() + "/"+ searchedLatitude.toString())
+        Log.d("changeSearchedCord", searchedLogitude.toString() + "/" + searchedLatitude.toString())
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -87,14 +85,14 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
         mapViewContainer.addView(mapView)
         val nowmapbutton = requireView().findViewById<View>(R.id.map_now_button)
         mapView.setMapViewEventListener(this)
-        mapView.setCalloutBalloonAdapter(object:CalloutBalloonAdapter{
+        mapView.setCalloutBalloonAdapter(object : CalloutBalloonAdapter {
             override fun getCalloutBalloon(p0: MapPOIItem?): View? {
-                Log.d("getCalloutBallon","true")
+                Log.d("getCalloutBallon", "true")
                 return null
             }
 
             override fun getPressedCalloutBalloon(p0: MapPOIItem?): View? {
-                Log.d("getPressedCalloutBallon","true")
+                Log.d("getPressedCalloutBallon", "true")
                 return null
             }
 
@@ -104,7 +102,7 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
         nowmapbutton.setOnClickListener{
             // service and permission check function
             if(!checkLocationServicesStatus()){
-                Toast.makeText(context, "gps와 인터넷을 켜주세요",Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "gps와 인터넷을 켜주세요", Toast.LENGTH_SHORT).show()
             }
             else{
                 if(checkRunTimePermission()) {
@@ -112,7 +110,7 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
                     val latitude: Double = gpsTracker.getLatitude()
                     val longitude: Double = gpsTracker.getLongitude()
                     mapView.setMapCenterPoint(MapPoint.mapPointWithGeoCoord(latitude, longitude), true)
-                    Toast.makeText(context, "현재위치 이동 완료",Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "현재위치 이동 완료", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -130,52 +128,49 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
                         .build()
                 val api = retrofit.create(spark::class.java)
                 val callGetWeekCount = api.getWeekCount()
-                callGetWeekCount.enqueue(object: Callback<List<regionCount>> {
+                callGetWeekCount.enqueue(object : Callback<List<regionCount>> {
                     override fun onResponse(call: Call<List<regionCount>>, response: Response<List<regionCount>>) {
-                        if(response.isSuccessful()) {
+                        if (response.isSuccessful()) {
                             val resData = Gson().toJson(response.body())
                             Log.d("weekcountrequest", "Successful")
 
                             localhash_update(resData)
                             poiarr.clear()
-                            for (l in localhash){
-                                if(l.value.first == 0){
+                            for (l in localhash) {
+                                if (l.value.first == 0) {
                                     continue
                                 }
                                 val marker0 = MapPOIItem()
-                                val point:MapPoint
+                                val point: MapPoint
                                 marker0.itemName = l.key + " : " + l.value.first.toString() + "건"
                                 marker0.tag = 0
                                 marker0.markerType = MapPOIItem.MarkerType.RedPin
 
                                 val tempstr = l.key.split(" ")
-                                if (tempstr[0] == "전체"){
+                                if (tempstr[0] == "전체") {
                                     continue
-                                }
-                                else if (tempstr[1] == "전체"){
-                                    point = MapPoint.mapPointWithGeoCoord(l.value.second,l.value.third)
+                                } else if (tempstr[1] == "전체") {
+                                    point = MapPoint.mapPointWithGeoCoord(l.value.second, l.value.third)
                                     marker0.mapPoint = point
                                     marker0.tag = 2
                                     poiarr.add(marker0)
-                                    mapView.selectPOIItem(marker0,false)
-                                }
-                                else{
-                                    point = MapPoint.mapPointWithGeoCoord(l.value.second,l.value.third)
+                                    mapView.selectPOIItem(marker0, false)
+                                } else {
+                                    point = MapPoint.mapPointWithGeoCoord(l.value.second, l.value.third)
                                     marker0.mapPoint = point
                                     poiarr.add(marker0)
                                 }
                             }
                             val tempPoint = mutableListOf<MapPOIItem>()
-                            if(mapView.zoomLevel < 7){
-                                for(p in poiarr){
-                                    if(p.tag == 0){
+                            if (mapView.zoomLevel < 7) {
+                                for (p in poiarr) {
+                                    if (p.tag == 0) {
                                         tempPoint.add(p)
                                     }
                                 }
-                            }
-                            else{
-                                for(p in poiarr){
-                                    if(p.tag == 2){
+                            } else {
+                                for (p in poiarr) {
+                                    if (p.tag == 2) {
                                         tempPoint.add(p)
                                     }
                                 }
@@ -207,7 +202,7 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
             val marker1 = mapView.findPOIItemByTag(1)
             searchedLatitude = marker1.mapPoint.mapPointGeoCoord.latitude.toDouble()
             searchedLogitude = marker1.mapPoint.mapPointGeoCoord.longitude.toDouble()
-            (activity as SubActivity).supportFragmentManager.beginTransaction().replace(R.id.frameLayout,mapsearchFragment()).addToBackStack("map").commit()
+            (activity as SubActivity).supportFragmentManager.beginTransaction().replace(R.id.frameLayout, mapsearchFragment()).addToBackStack("map").commit()
         }
         if(searchFlag){
             // inactive button
@@ -227,12 +222,12 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
             val marker1 = MapPOIItem()
             marker1.itemName = ""
             marker1.tag = 1
-            val mappoint = MapPoint.mapPointWithGeoCoord(searchedLatitude,searchedLogitude)
+            val mappoint = MapPoint.mapPointWithGeoCoord(searchedLatitude, searchedLogitude)
             marker1.mapPoint =mappoint
             marker1.markerType = MapPOIItem.MarkerType.BluePin
             marker1.isDraggable = true
             mapView.addPOIItem(marker1)
-            mapView.setMapCenterPoint(mappoint,true)
+            mapView.setMapCenterPoint(mappoint, true)
 
         }
         searchmapbutton.setOnClickListener{
@@ -260,14 +255,115 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
         }
         nextmapbutton.setOnClickListener{
             // inactive button
+            val circle = MapCircle(mapView.findPOIItemByTag(1).mapPoint, 0, R.color.black, android.graphics.Color.argb(100, 10, 10, 10))
+            circle.tag = 0
+            mapView.addCircle(circle)
             markerFlag = false
             requireView().findViewById<View>(R.id.search_map_text).visibility = View.INVISIBLE
+            nowmapbutton.visibility = View.INVISIBLE
             nextmapbutton.visibility = View.INVISIBLE
             localsearchbutton.visibility = View.INVISIBLE
             // active button, function
+            requireView().findViewById<View>(R.id.seek_layer).visibility = View.VISIBLE
+            val seekbar = requireView().findViewById<SeekBar>(R.id.seekBar2)
+            val seekText = requireView().findViewById<View>(R.id.seekText) as TextView
+            val check_button = requireView().findViewById<View>(R.id.check_map_button)
+            val add_button = requireView().findViewById<View>(R.id.addlocal_map_button)
+            val local_button = requireView().findViewById<View>(R.id.map_local_list)
+            val recycler = requireView().findViewById<View>(R.id.locallist) as RecyclerView
+            check_button.visibility = View.VISIBLE
+            add_button.visibility = View.VISIBLE
+            local_button.visibility = View.VISIBLE
+            recycler.visibility = View.VISIBLE
+            recycler.layoutManager = LinearLayoutManager(context)
+            val selectedLocalList = mutableListOf<String>()
+            val checkedList = mutableListOf<Boolean>()
+            val locallistadpater = mapListAdapter(selectedLocalList,checkedList)
+            recycler.adapter = locallistadpater
+            seekbar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                    seekText.text = (progress.toString() + "km")
+                    circle.radius = progress * 1000
+                    mapView.removeAllCircles()
+                    mapView.addCircle(circle)
+                }
 
+                override fun onStartTrackingTouch(seekBar: SeekBar?) {
+
+                }
+
+                override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                    selectedLocalList.clear()
+                    checkedList.clear()
+                    val x = mapView.findPOIItemByTag(1).mapPoint.mapPointGeoCoord.longitude
+                    val y = mapView.findPOIItemByTag(1).mapPoint.mapPointGeoCoord.latitude
+                    val radius = mapView.findCircleByTag(0).radius
+                    val url = "http://api.vworld.kr/req/data?service=data&request=GetFeature&data=LT_C_ADSIGG_INFO&key=84F7B2A4-03FC-34AA-B039-11693223A532&&domain=inu.project.spark&crs=EPSG:4019&size=1000" +
+                            "&geomFilter=point($x $y)&buffer=$radius"
+                    val client = OkHttpClient()
+                    val request = Request.Builder().url(url).build()
+                    client.newCall(request).enqueue(object : okhttp3.Callback {
+                        override fun onFailure(call: okhttp3.Call, e: IOException) {
+                            Toast.makeText(requireContext(), "connection failed", Toast.LENGTH_SHORT).show()
+                        }
+
+                        override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                            val tempstr = response.body?.string().toString()
+                            Log.d("vworld", tempstr)
+                            try {
+                                val json = JSONObject(tempstr).getJSONObject("response").getJSONObject("result").getJSONObject("featureCollection").getJSONArray("features")
+                                for (i in 0 until json.length()) {
+                                    val tempobj = json.getJSONObject(i).getJSONObject("properties").getString("full_nm")
+                                    val sublocal = tempobj.split(" ")
+                                    if (sublocal.size > 2) {
+                                        val str = sublocal[0] + " " + sublocal[1]
+                                        if (!selectedLocalList.contains(str)) {
+                                            selectedLocalList.add(str)
+                                            checkedList.add(true)
+                                        }
+                                        continue
+                                    } else if (sublocal.size == 1) {
+                                        selectedLocalList.add(sublocal[0])
+                                        checkedList.add(true)
+                                        continue
+                                    } else if (sublocal[1].contains('시') && sublocal[1].contains('구')) {
+                                        val str = sublocal[0] + " " + sublocal[1].split("시")[0] + "시"
+                                        if (!selectedLocalList.contains(str)) {
+                                            selectedLocalList.add(str)
+                                            checkedList.add(true)
+                                        }
+                                        continue
+                                    } else {
+                                        selectedLocalList.add(tempobj)
+                                        checkedList.add(true)
+                                    }
+                                }
+                                (activity as SubActivity).runOnUiThread(Runnable { locallistadpater.notifyDataSetChanged() })
+                                Log.d("response", selectedLocalList.toString())
+                            } catch (e: JSONException) {
+                                Log.d("JSONExceipton", "error")
+                            }
+                        }
+                    })
+                }
+            })
+            check_button.setOnClickListener{
+                val baseURL = MyApplication.baseurl
+                val retrofit = Retrofit.Builder()
+                        .baseUrl(baseURL)
+                        .addConverterFactory(GsonConverterFactory.create())
+                        .build()
+                val api = retrofit.create(spark::class.java)
+                val callGetWeekCount = api.getWeekCount()
+
+                val check = locallistadpater.getCheckList()
+                for (i in 0 until check.size){
+                    if(check[i]){
+                        selectedLocalList[i]
+                    }
+                }
+            }
         }
-
     }
 
 
@@ -399,11 +495,11 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
             }
             val index:Int = localarray2.size
             for (i in 0..index-1){
-                localhash[local1 + " " + localarray2[i]] = Triple(0,local_latitude[i].toDouble(),local_longitude[i].toDouble())
+                localhash[local1 + " " + localarray2[i]] = Triple(0, local_latitude[i].toDouble(), local_longitude[i].toDouble())
             }
         }
     }
-    fun localhash_update(strjson:String){
+    fun localhash_update(strjson: String){
         try{
             val jarr = JSONArray(strjson)
             val s = jarr.length()
@@ -414,11 +510,11 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
                 if (key == "세종특별자치시"){
                     key += " 전체"
                 }
-                localhash[key] = Triple(value,localhash[key]!!.second,localhash[key]!!.third)
+                localhash[key] = Triple(value, localhash[key]!!.second, localhash[key]!!.third)
             }
-        }catch(e:JSONException){
+        }catch (e: JSONException){
             e.printStackTrace()
-            Toast.makeText(requireContext(),"json error",Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "json error", Toast.LENGTH_SHORT).show()
         }
     }
     // overriding MapView.MapViewEventListener
@@ -431,7 +527,7 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
     }
 
     override fun onMapViewZoomLevelChanged(p0: MapView?, p1: Int) {
-        Log.d("zoomlevelchange",p1.toString())
+        Log.d("zoomlevelchange", p1.toString())
         if(displayFlag){
             if(p1 < 7){
                 if(p0!!.findPOIItemByTag(0)==null){
@@ -500,7 +596,7 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
 
     }
 
-    class MarkerEventListener(context:Context):MapView.POIItemEventListener{
+    class MarkerEventListener(context: Context):MapView.POIItemEventListener{
         private val c = context
         override fun onPOIItemSelected(p0: MapView?, p1: MapPOIItem?) {
 
@@ -513,7 +609,7 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
         override fun onCalloutBalloonOfPOIItemTouched(p0: MapView?, p1: MapPOIItem?, p2: MapPOIItem.CalloutBalloonButtonType?) {
             if(p1!=null){
                 if(p1.tag == 0 || p1.tag == 2){
-                    Log.d("onCalloutBalloonOfPOIItemTouched + p2","true")
+                    Log.d("onCalloutBalloonOfPOIItemTouched + p2", "true")
                     val builder = Dialog(c)
                     builder.setContentView(R.layout.search_local_dialog)
                     builder.setTitle(p1.itemName.toString())
@@ -531,13 +627,13 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
                     recycler.layoutManager = LinearLayoutManager(c)
                     val api = retrofit.create(spark::class.java)
                     val getWeekDetail = api.getWeekDetail(p1.itemName.split(" : ")[0])
-                    getWeekDetail.enqueue(object: Callback<List<Data>> {
+                    getWeekDetail.enqueue(object : Callback<List<Data>> {
                         override fun onResponse(call: Call<List<Data>>, response: Response<List<Data>>) {
-                            if(response.isSuccessful()) {
-                                val resData =  Gson().toJson(response.body())
+                            if (response.isSuccessful()) {
+                                val resData = Gson().toJson(response.body())
                                 list.clear()
                                 val tempobject = JSONArray(resData)
-                                for (i in 0 until tempobject.length()){
+                                for (i in 0 until tempobject.length()) {
                                     list.add(tempobject.getJSONObject(i).toString())
                                 }
                                 adapter.notifyDataSetChanged()
@@ -548,6 +644,7 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
                                 Log.d("getWeekDetail", "notSuccessful")
                             }
                         }
+
                         override fun onFailure(call: Call<List<Data>>, t: Throwable) {
 
                             Log.e("getWeekDetail", "onFailure")
