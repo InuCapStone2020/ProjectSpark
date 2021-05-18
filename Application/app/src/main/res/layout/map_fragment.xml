@@ -54,7 +54,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="10"
-                android:max="100"
+                android:max="2000"
                 android:progress="0" />
 
             <TextView
@@ -62,7 +62,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="0"
-                android:text="100km"
+                android:text="20km"
                 android:textColor="@color/black"
                 android:textSize="24sp" />
         </LinearLayout>
@@ -140,17 +140,19 @@
         android:layout_marginStart="12dp"
         android:layout_marginTop="12dp"
         android:background="@drawable/borderline"
+        android:clickable="true"
         android:padding="4dp"
         android:text="리스트 v"
+        android:textColor="@color/black"
         android:textSize="18sp"
         android:visibility="invisible" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/locallist"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="130dp"
+        android:layout_height="382dp"
         android:layout_marginStart="12dp"
-        android:layout_marginTop="48dp"
+        android:layout_marginTop="46dp"
         android:background="@drawable/borderline"
         android:visibility="invisible" />
 

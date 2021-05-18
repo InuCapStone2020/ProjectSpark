@@ -1,10 +1,12 @@
 package inu.project.spark
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.location.LocationManager
 import android.os.Bundle
 import android.util.Log
@@ -34,6 +36,7 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.IOException
+import java.util.*
 
 
 class mapFragment : Fragment(),MapView.MapViewEventListener {
@@ -225,7 +228,7 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
             val mappoint = MapPoint.mapPointWithGeoCoord(searchedLatitude, searchedLogitude)
             marker1.mapPoint =mappoint
             marker1.markerType = MapPOIItem.MarkerType.BluePin
-            marker1.isDraggable = true
+            marker1.isDraggable = false
             mapView.addPOIItem(marker1)
             mapView.setMapCenterPoint(mappoint, true)
 
@@ -250,7 +253,7 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
             marker1.tag = 1
             marker1.mapPoint = mapView.mapCenterPoint
             marker1.markerType = MapPOIItem.MarkerType.BluePin
-            marker1.isDraggable = true
+            marker1.isDraggable = false
             mapView.addPOIItem(marker1)
         }
         nextmapbutton.setOnClickListener{
@@ -274,16 +277,16 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
             check_button.visibility = View.VISIBLE
             add_button.visibility = View.VISIBLE
             local_button.visibility = View.VISIBLE
-            recycler.visibility = View.VISIBLE
             recycler.layoutManager = LinearLayoutManager(context)
             val selectedLocalList = mutableListOf<String>()
             val checkedList = mutableListOf<Boolean>()
             val locallistadpater = mapListAdapter(selectedLocalList,checkedList)
             recycler.adapter = locallistadpater
+            recycler.setHasFixedSize(true)
             seekbar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                    seekText.text = (progress.toString() + "km")
-                    circle.radius = progress * 1000
+                    seekText.text = ("${progress/100} . ${progress%100}km")
+                    circle.radius = progress * 10
                     mapView.removeAllCircles()
                     mapView.addCircle(circle)
                 }
@@ -293,6 +296,17 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
                 }
 
                 override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                    recycler.visibility = View.INVISIBLE
+                }
+            })
+            var recyclerflag = false
+            local_button.setOnClickListener {
+                if(recyclerflag){
+                    recycler.visibility = View.INVISIBLE
+                    recyclerflag = false
+                }
+                else{
+                    recyclerflag = true
                     selectedLocalList.clear()
                     checkedList.clear()
                     val x = mapView.findPOIItemByTag(1).mapPoint.mapPointGeoCoord.longitude
@@ -338,7 +352,9 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
                                         checkedList.add(true)
                                     }
                                 }
-                                (activity as SubActivity).runOnUiThread(Runnable { locallistadpater.notifyDataSetChanged() })
+                                (activity as SubActivity).runOnUiThread(Runnable {
+                                    recycler.visibility = View.VISIBLE
+                                    locallistadpater.notifyDataSetChanged() })
                                 Log.d("response", selectedLocalList.toString())
                             } catch (e: JSONException) {
                                 Log.d("JSONExceipton", "error")
@@ -346,22 +362,80 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
                         }
                     })
                 }
-            })
+
+            }
             check_button.setOnClickListener{
-                val baseURL = MyApplication.baseurl
-                val retrofit = Retrofit.Builder()
-                        .baseUrl(baseURL)
-                        .addConverterFactory(GsonConverterFactory.create())
-                        .build()
-                val api = retrofit.create(spark::class.java)
-                val callGetWeekCount = api.getWeekCount()
+                var region:String = ""
+                val time = Calendar.getInstance()
+                val edate = "${time.get(Calendar.YEAR)}/${time.get(Calendar.MONTH)+1}/${time.get(Calendar.DATE)}"
+                time.add(Calendar.DATE,-7)
+                val sdate = "${time.get(Calendar.YEAR)}/${time.get(Calendar.MONTH)+1}/${time.get(Calendar.DATE)}"
+                val event = "전염병','자연 재해','기타"
+                val page = 1
 
                 val check = locallistadpater.getCheckList()
+                val tempList = mutableListOf<String>()
                 for (i in 0 until check.size){
                     if(check[i]){
-                        selectedLocalList[i]
+                        tempList.add(selectedLocalList[i])
                     }
                 }
+                if(tempList.size == 0){
+                  Toast.makeText(context,"선택된 지역이 없습니다.",Toast.LENGTH_SHORT).show()
+                }
+                else{
+                    region = tempList[0]
+                    for (i in 1 until tempList.size){
+                        region+= "','"+tempList[i]
+                    }
+                    val baseURL = MyApplication.baseurl
+                    val retrofit = Retrofit.Builder()
+                            .baseUrl(baseURL)
+                            .addConverterFactory(GsonConverterFactory.create())
+                            .build()
+                    val api = retrofit.create(spark::class.java)
+                    val callGetSearch = api.getSearch(region, sdate, edate, event, page)
+                    callGetSearch.enqueue(object : Callback<ResultGetSearch> {
+                        @SuppressLint("UseCompatLoadingForDrawables")
+                        override fun onResponse(call: Call<ResultGetSearch>, response: Response<ResultGetSearch>) {
+                            if(response.isSuccessful()) {
+                                try{
+                                    val resData =  Gson().toJson(response.body())
+                                    val cnt = JSONObject(resData).getJSONArray("cnt").getJSONObject(0).getInt("count")
+                                    mapView.findPOIItemByTag(1).itemName = "선택 지역 : $cnt 건"
+                                    mapView.selectPOIItem(mapView.findPOIItemByTag(1),true)
+                                }catch(e:JSONException){
+                                    e.printStackTrace()
+                                }
+
+                            } else {
+                                Log.d("GetSearch", "responseFail")
+                            }
+                        }
+                        override fun onFailure(call: Call<ResultGetSearch>, t: Throwable) {
+                            Log.e("GetSearch", "onFailure")
+                        }
+                    })
+                }
+            }
+            add_button.setOnClickListener{
+                val check = locallistadpater.getCheckList()
+                val tempList = mutableListOf<String>()
+                for (i in 0 until check.size){
+                    if(check[i]){
+                        tempList.add(selectedLocalList[i])
+                    }
+                }
+                for (i in 0 until tempList.size){
+                    val localTemp = tempList[i].split(" ")
+                    if(localTemp.size == 1){
+                        MyApplication.prefs.savelocal(localTemp[0],"전체")
+                    }
+                    else{
+                        MyApplication.prefs.savelocal(localTemp[0],localTemp[1])
+                    }
+                }
+                Toast.makeText(context,"총 ${tempList.size}개의 지역이 추가 되었습니다.",Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -567,7 +641,7 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
                 marker1.tag = 1
                 marker1.mapPoint = mapview.mapCenterPoint
                 marker1.markerType = MapPOIItem.MarkerType.BluePin
-                marker1.isDraggable = true
+                marker1.isDraggable = false
                 mapview.addPOIItem(marker1)
             }
             else{

@@ -471,11 +471,11 @@ class searchFragment : Fragment() {
                         }
 
                     } else {
-                        Log.d("TEST", "사실상 실패")
+                        Log.d("GetSearch", "responseFail")
                     }
                 }
                 override fun onFailure(call: Call<ResultGetSearch>, t: Throwable) {
-                    Log.e("TEST", "실패")
+                    Log.e("GetSearch", "onFailure")
                 }
             })
         }
