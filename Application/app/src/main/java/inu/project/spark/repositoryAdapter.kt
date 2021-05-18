@@ -79,9 +79,6 @@ class repositoryAdapter(list:MutableList<Contacts>,checkedlist:MutableList<Boole
         holder.item_body.text = y
         holder.item_date.text = temptime
         holder.item_check.isChecked = tempcheck
-        holder.item_check.setOnCheckedChangeListener { _, isChecked ->
-            checklist[position] = isChecked
-        }
         holder.item_all.setOnClickListener {
             if(deleteFlag){
                 holder.item_check.isChecked = !holder.item_check.isChecked
@@ -106,6 +103,9 @@ class repositoryAdapter(list:MutableList<Contacts>,checkedlist:MutableList<Boole
             item_date = itemView.findViewById<TextView>(R.id.search_item_date)
             item_all = itemView.findViewById<View>(R.id.search_items)
             item_check = itemView.findViewById<CheckBox>(R.id.reposit_checkBox)
+            item_check.setOnCheckedChangeListener { buttonView, isChecked ->
+                checklist[adapterPosition] = isChecked
+            }
         }
     }
 }

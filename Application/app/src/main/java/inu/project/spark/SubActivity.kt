@@ -35,6 +35,7 @@ class SubActivity : AppCompatActivity(){
         setContentView(R.layout.activity_sub)
         callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
+                initMapFragment()
                 gotoMainActiverty()
             }
         }
@@ -77,6 +78,7 @@ class SubActivity : AppCompatActivity(){
             var i:Intent? = null
             when (menuItem.itemId){
                 R.id.homeItem->{
+                    initMapFragment()
                     i = Intent(this, MainActivity::class.java)
                     startActivity(i)
                 }

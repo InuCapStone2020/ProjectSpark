@@ -22,9 +22,6 @@ class mapListAdapter(l:MutableList<String>,c:MutableList<Boolean>) : RecyclerVie
     override fun onBindViewHolder(holder: mapListAdapter.MyViewHolder, position: Int) {
         holder.textView.text = list[position]
         holder.check.isChecked = checkList[position]
-        holder.check.setOnCheckedChangeListener { buttonView, isChecked ->
-            checkList[position] = isChecked
-        }
     }
 
     override fun getItemCount(): Int {
@@ -36,6 +33,9 @@ class mapListAdapter(l:MutableList<String>,c:MutableList<Boolean>) : RecyclerVie
         init{
             textView = itemView.findViewById(R.id.map_list_item_text)
             check = itemView.findViewById(R.id.map_list_item_check)
+            check.setOnCheckedChangeListener { buttonView, isChecked ->
+                checkList[adapterPosition] = isChecked
+            }
         }
     }
 }

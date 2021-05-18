@@ -45,37 +45,19 @@ class searchFragment : Fragment() {
         val localbutton = requireView().findViewById<View>(R.id.search_local_text)
         val eventbutton = requireView().findViewById<View>(R.id.search_event_text)
         //check network service 추가
-        //mindate 서버로부터 가져오기
-        var minstr:String = "start"
-
         val baseURL = MyApplication.baseurl
-        // try catch 설정
         val retrofit = Retrofit.Builder()
-            .baseUrl(baseURL)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
+                .baseUrl(baseURL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
 
         val api = retrofit.create(spark::class.java)
-        val callGetMindate = api.getMindate()
-
-        callGetMindate.enqueue(object: Callback<List<mindate>> {
-            override fun onResponse(call: Call<List<mindate>>, response: Response<List<mindate>>) {
-                if(response.isSuccessful()) {
-                    minstr = Gson().toJson(response.body())
-                    Log.d("getMindate", "Successful")
-                } else {
-                    minstr = "connection failed"
-                    Log.d("getMindate", "notSuccessful")
-                }
-            }
-            override fun onFailure(call: Call<List<mindate>>, t: Throwable) {
-                minstr = "connection failed"
-                Log.e("getMindate", "onFailure")
-            }
-        })
         //시간 설정
         var datelist:String = ""
         datebutton.setOnClickListener{
+            //mindate 서버로부터 가져오기
+            var minstr:String = "start"
+
             val builder = Dialog(requireContext())
             builder.setContentView(R.layout.search_date_dialog)
             builder.setTitle("날짜 설정")
@@ -84,88 +66,98 @@ class searchFragment : Fragment() {
             val start = builder.findViewById<View>(R.id.searchdialog_startdate) as TextView
             val end = builder.findViewById<View>(R.id.searchdialog_enddate)as TextView
 
-            if (datelist !=""){
-                start.text = datelist.split("~")[0]
-                end.text = datelist.split("~")[1]
-            }
+            val callGetMindate = api.getMindate()
+            callGetMindate.enqueue(object: Callback<List<mindate>> {
+                override fun onResponse(call: Call<List<mindate>>, response: Response<List<mindate>>) {
+                    if(response.isSuccessful()) {
+                        minstr = Gson().toJson(response.body())
+                        Log.d("getMindate", "Successful")
+                        if (datelist !=""){
+                            start.text = datelist.split("~")[0]
+                            end.text = datelist.split("~")[1]
+                        }
+                        val time = Calendar.getInstance()
+                        fun l(v:TextView,min:Long,max:Long){
+                            val year = time.get(Calendar.YEAR)
+                            val month = time.get(Calendar.MONTH)
+                            val day = time.get(Calendar.DATE)
+                            var datestring: String = ""
+                            val dateListener = object : DatePickerDialog.OnDateSetListener {
+                                override fun onDateSet(view: DatePicker?, year: Int, month: Int, dayOfMonth: Int) {
+                                    datestring = "${year}-${String.format("%02d",month+1)}-${String.format("%02d",dayOfMonth)}"
+                                    v.text = datestring
+                                }
+                            }
+                            val datebuilder = DatePickerDialog(requireContext(), dateListener,year,month,day)
+                            datebuilder.datePicker.maxDate = max
+                            datebuilder.datePicker.minDate = min
+                            datebuilder.show()
+                        }
+                        start.setOnClickListener{
+                            // jsonstring parse to string
+                            val temparr = JSONArray(minstr)
+                            val tempobj = temparr.getJSONObject(0)
+                            val temp = tempobj.getString("mindate")
+                            val a = temp.split("-")
+                            val b = Calendar.getInstance()
+                            b.set(a[0].toInt(),a[1].toInt()-1,(a[2].split("T")[0]).toInt())
+                            if (end.text.toString() == ""){
+                                l(start,b.timeInMillis,time.timeInMillis)
+                            }
+                            else{
+                                val temp2 = end.text.toString()
+                                val a2 = temp2.split("-")
+                                val b2 = Calendar.getInstance()
+                                b2.set(a2[0].toInt(),a2[1].toInt()-1,a2[2].toInt())
+                                l(start,b.timeInMillis,b2.timeInMillis)
+                            }
+                        }
+                        end.setOnClickListener{
+                            if(start.text.toString() == ""){
+                                val temparr = JSONArray(minstr)
+                                val tempobj = temparr.getJSONObject(0)
+                                val temp = tempobj.getString("mindate")
+                                val a = temp.split("-")
+                                val b = Calendar.getInstance()
+                                b.set(a[0].toInt(),a[1].toInt()-1,(a[2].split("T")[0]).toInt())
+                                l(end,b.timeInMillis,time.timeInMillis)
+                            }
+                            else{
+                                val temp2 = start.text.toString()
+                                val a2 = temp2.split("-")
+                                val b2 = Calendar.getInstance()
+                                b2.set(a2[0].toInt(),a2[1].toInt()-1,a2[2].toInt())
+                                l(end,b2.timeInMillis,time.timeInMillis)
+                            }
+                        }
+                        val add = builder.findViewById<View>(R.id.searchdatedialog_ok_button)
+                        add.setOnClickListener{
+                            if(start.text.toString() != "" && end.text.toString() != ""){
+                                datelist = start.text.toString() + "~" + end.text.toString()
+                            }
+                            builder.dismiss()
+                        }
+                        val cancle = builder.findViewById<View>(R.id.searchdatedialog_cancle_button)
+                        cancle.setOnClickListener{
+                            builder.dismiss()
+                        }
 
-            while(true) {
-                if (minstr != "start") {
-                    Log.d("test",minstr)
-                    break
-                }
-            }
-            // connection failed
-            if (minstr == "connection failed"){
-                Toast.makeText(requireContext(),"서버로부터 데이터 불러오기가 안됩니다.\n 인터넷설정이 제대로 되어있는지 확인하여 주십시오",Toast.LENGTH_LONG).show()
-                builder.dismiss()
-            }
-            // datepicker dialog
-            val time = Calendar.getInstance()
-            fun l(v:TextView,min:Long,max:Long){
-                val year = time.get(Calendar.YEAR)
-                val month = time.get(Calendar.MONTH)
-                val day = time.get(Calendar.DATE)
-                var datestring: String = ""
-                val dateListener = object : DatePickerDialog.OnDateSetListener {
-                    override fun onDateSet(view: DatePicker?, year: Int, month: Int, dayOfMonth: Int) {
-                        datestring = "${year}-${String.format("%02d",month+1)}-${String.format("%02d",dayOfMonth)}"
-                        v.text = datestring
+
+                    } else {
+                        minstr = "connection failed"
+                        Toast.makeText(requireContext(),"서버로부터 데이터 불러오기가 안됩니다.\n 인터넷설정이 제대로 되어있는지 확인하여 주십시오",Toast.LENGTH_LONG).show()
+                        builder.dismiss()
+                        Log.d("getMindate", "notSuccessful")
                     }
                 }
-                val datebuilder = DatePickerDialog(requireContext(), dateListener,year,month,day)
-                datebuilder.datePicker.maxDate = max
-                datebuilder.datePicker.minDate = min
-                datebuilder.show()
-            }
-            start.setOnClickListener{
-                // jsonstring parse to string
-                val temparr = JSONArray(minstr)
-                val tempobj = temparr.getJSONObject(0)
-                val temp = tempobj.getString("mindate")
-                val a = temp.split("-")
-                val b = Calendar.getInstance()
-                b.set(a[0].toInt(),a[1].toInt()-1,(a[2].split("T")[0]).toInt())
-                if (end.text.toString() == ""){
-                    l(start,b.timeInMillis,time.timeInMillis)
+                override fun onFailure(call: Call<List<mindate>>, t: Throwable) {
+                    minstr = "connection failed"
+                    Toast.makeText(requireContext(),"서버로부터 데이터 불러오기가 안됩니다.\n 인터넷설정이 제대로 되어있는지 확인하여 주십시오",Toast.LENGTH_LONG).show()
+                    builder.dismiss()
+                    Log.e("getMindate", "onFailure")
                 }
-                else{
-                    val temp2 = end.text.toString()
-                    val a2 = temp2.split("-")
-                    val b2 = Calendar.getInstance()
-                    b2.set(a2[0].toInt(),a2[1].toInt()-1,a2[2].toInt())
-                    l(start,b.timeInMillis,b2.timeInMillis)
-                }
-            }
-            end.setOnClickListener{
-                if(start.text.toString() == ""){
-                    val temparr = JSONArray(minstr)
-                    val tempobj = temparr.getJSONObject(0)
-                    val temp = tempobj.getString("mindate")
-                    val a = temp.split("-")
-                    val b = Calendar.getInstance()
-                    b.set(a[0].toInt(),a[1].toInt()-1,(a[2].split("T")[0]).toInt())
-                    l(end,b.timeInMillis,time.timeInMillis)
-                }
-                else{
-                    val temp2 = start.text.toString()
-                    val a2 = temp2.split("-")
-                    val b2 = Calendar.getInstance()
-                    b2.set(a2[0].toInt(),a2[1].toInt()-1,a2[2].toInt())
-                    l(end,b2.timeInMillis,time.timeInMillis)
-                }
-            }
-            val add = builder.findViewById<View>(R.id.searchdatedialog_ok_button)
-            add.setOnClickListener{
-                if(start.text.toString() != "" && end.text.toString() != ""){
-                    datelist = start.text.toString() + "~" + end.text.toString()
-                }
-                builder.dismiss()
-            }
-            val cancle = builder.findViewById<View>(R.id.searchdatedialog_cancle_button)
-            cancle.setOnClickListener{
-                builder.dismiss()
-            }
+            })
+
         }
         // 지역 설정
         val locallist:MutableList<String> = mutableListOf()
