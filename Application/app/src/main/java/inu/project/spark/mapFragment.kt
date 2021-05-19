@@ -283,6 +283,7 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
             val locallistadpater = mapListAdapter(selectedLocalList,checkedList)
             recycler.adapter = locallistadpater
             recycler.setHasFixedSize(true)
+            var recyclerflag = false
             seekbar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                     seekText.text = ("${progress/100} . ${progress%100}km")
@@ -297,96 +298,31 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
 
                 override fun onStopTrackingTouch(seekBar: SeekBar?) {
                     recycler.visibility = View.INVISIBLE
-                }
-            })
-            var recyclerflag = false
-            local_button.setOnClickListener {
-                if(recyclerflag){
-                    recycler.visibility = View.INVISIBLE
                     recyclerflag = false
                 }
-                else{
-                    recyclerflag = true
-                    selectedLocalList.clear()
-                    checkedList.clear()
-                    val x = mapView.findPOIItemByTag(1).mapPoint.mapPointGeoCoord.longitude
-                    val y = mapView.findPOIItemByTag(1).mapPoint.mapPointGeoCoord.latitude
-                    val radius = mapView.findCircleByTag(0).radius
-                    val url = "http://api.vworld.kr/req/data?service=data&request=GetFeature&data=LT_C_ADSIGG_INFO&key=84F7B2A4-03FC-34AA-B039-11693223A532&&domain=inu.project.spark&crs=EPSG:4019&size=1000" +
-                            "&geomFilter=point($x $y)&buffer=$radius"
-                    val client = OkHttpClient()
-                    val request = Request.Builder().url(url).build()
-                    client.newCall(request).enqueue(object : okhttp3.Callback {
-                        override fun onFailure(call: okhttp3.Call, e: IOException) {
-                            Toast.makeText(requireContext(), "connection failed", Toast.LENGTH_SHORT).show()
-                        }
-
-                        override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
-                            val tempstr = response.body?.string().toString()
-                            Log.d("vworld", tempstr)
-                            try {
-                                val json = JSONObject(tempstr).getJSONObject("response").getJSONObject("result").getJSONObject("featureCollection").getJSONArray("features")
-                                for (i in 0 until json.length()) {
-                                    val tempobj = json.getJSONObject(i).getJSONObject("properties").getString("full_nm")
-                                    val sublocal = tempobj.split(" ")
-                                    if (sublocal.size > 2) {
-                                        val str = sublocal[0] + " " + sublocal[1]
-                                        if (!selectedLocalList.contains(str)) {
-                                            selectedLocalList.add(str)
-                                            checkedList.add(true)
-                                        }
-                                        continue
-                                    } else if (sublocal.size == 1) {
-                                        selectedLocalList.add(sublocal[0])
-                                        checkedList.add(true)
-                                        continue
-                                    } else if (sublocal[1].contains('시') && sublocal[1].contains('구')) {
-                                        val str = sublocal[0] + " " + sublocal[1].split("시")[0] + "시"
-                                        if (!selectedLocalList.contains(str)) {
-                                            selectedLocalList.add(str)
-                                            checkedList.add(true)
-                                        }
-                                        continue
-                                    } else {
-                                        selectedLocalList.add(tempobj)
-                                        checkedList.add(true)
-                                    }
-                                }
-                                (activity as SubActivity).runOnUiThread(Runnable {
-                                    recycler.visibility = View.VISIBLE
-                                    locallistadpater.notifyDataSetChanged() })
-                                Log.d("response", selectedLocalList.toString())
-                            } catch (e: JSONException) {
-                                Log.d("JSONExceipton", "error")
-                            }
-                        }
-                    })
-                }
-
-            }
-            check_button.setOnClickListener{
-                var region:String = ""
+            })
+            fun checkButton(){
+                var region: String = ""
                 val time = Calendar.getInstance()
-                val edate = "${time.get(Calendar.YEAR)}/${time.get(Calendar.MONTH)+1}/${time.get(Calendar.DATE)}"
-                time.add(Calendar.DATE,-7)
-                val sdate = "${time.get(Calendar.YEAR)}/${time.get(Calendar.MONTH)+1}/${time.get(Calendar.DATE)}"
+                val edate = "${time.get(Calendar.YEAR)}/${time.get(Calendar.MONTH) + 1}/${time.get(Calendar.DATE)}"
+                time.add(Calendar.DATE, -7)
+                val sdate = "${time.get(Calendar.YEAR)}/${time.get(Calendar.MONTH) + 1}/${time.get(Calendar.DATE)}"
                 val event = "전염병','자연 재해','기타"
                 val page = 1
 
                 val check = locallistadpater.getCheckList()
                 val tempList = mutableListOf<String>()
-                for (i in 0 until check.size){
-                    if(check[i]){
+                for (i in 0 until check.size) {
+                    if (check[i]) {
                         tempList.add(selectedLocalList[i])
                     }
                 }
-                if(tempList.size == 0){
-                  Toast.makeText(context,"선택된 지역이 없습니다.",Toast.LENGTH_SHORT).show()
-                }
-                else{
+                if (tempList.size == 0) {
+                    Toast.makeText(context, "선택된 지역이 없습니다.", Toast.LENGTH_SHORT).show()
+                } else {
                     region = tempList[0]
-                    for (i in 1 until tempList.size){
-                        region+= "','"+tempList[i]
+                    for (i in 1 until tempList.size) {
+                        region += "','" + tempList[i]
                     }
                     val baseURL = MyApplication.baseurl
                     val retrofit = Retrofit.Builder()
@@ -398,13 +334,13 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
                     callGetSearch.enqueue(object : Callback<ResultGetSearch> {
                         @SuppressLint("UseCompatLoadingForDrawables")
                         override fun onResponse(call: Call<ResultGetSearch>, response: Response<ResultGetSearch>) {
-                            if(response.isSuccessful()) {
-                                try{
-                                    val resData =  Gson().toJson(response.body())
+                            if (response.isSuccessful()) {
+                                try {
+                                    val resData = Gson().toJson(response.body())
                                     val cnt = JSONObject(resData).getJSONArray("cnt").getJSONObject(0).getInt("count")
                                     mapView.findPOIItemByTag(1).itemName = "선택 지역 : $cnt 건"
-                                    mapView.selectPOIItem(mapView.findPOIItemByTag(1),true)
-                                }catch(e:JSONException){
+                                    mapView.selectPOIItem(mapView.findPOIItemByTag(1), true)
+                                } catch (e: JSONException) {
                                     e.printStackTrace()
                                 }
 
@@ -418,7 +354,7 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
                     })
                 }
             }
-            add_button.setOnClickListener{
+            fun addButton(){
                 val check = locallistadpater.getCheckList()
                 val tempList = mutableListOf<String>()
                 for (i in 0 until check.size){
@@ -436,6 +372,100 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
                     }
                 }
                 Toast.makeText(context,"총 ${tempList.size}개의 지역이 추가 되었습니다.",Toast.LENGTH_SHORT).show()
+            }
+            fun searchLocal(id:Int){
+                recyclerflag = true
+                selectedLocalList.clear()
+                checkedList.clear()
+                val x = mapView.findPOIItemByTag(1).mapPoint.mapPointGeoCoord.longitude
+                val y = mapView.findPOIItemByTag(1).mapPoint.mapPointGeoCoord.latitude
+                val radius = mapView.findCircleByTag(0).radius
+                val url = "http://api.vworld.kr/req/data?service=data&request=GetFeature&data=LT_C_ADSIGG_INFO&key=84F7B2A4-03FC-34AA-B039-11693223A532&&domain=inu.project.spark&crs=EPSG:4019&size=1000" +
+                        "&geomFilter=point($x $y)&buffer=$radius"
+                val client = OkHttpClient()
+                val request = Request.Builder().url(url).build()
+                client.newCall(request).enqueue(object : okhttp3.Callback {
+                    override fun onFailure(call: okhttp3.Call, e: IOException) {
+                        Toast.makeText(requireContext(), "connection failed", Toast.LENGTH_SHORT).show()
+                    }
+
+                    override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                        val tempstr = response.body?.string().toString()
+                        Log.d("vworld", tempstr)
+                        try {
+                            val json = JSONObject(tempstr).getJSONObject("response").getJSONObject("result").getJSONObject("featureCollection").getJSONArray("features")
+                            for (i in 0 until json.length()) {
+                                val tempobj = json.getJSONObject(i).getJSONObject("properties").getString("full_nm")
+                                val sublocal = tempobj.split(" ")
+                                if (sublocal.size > 2) {
+                                    val str = sublocal[0] + " " + sublocal[1]
+                                    if (!selectedLocalList.contains(str)) {
+                                        selectedLocalList.add(str)
+                                        checkedList.add(true)
+                                    }
+                                    continue
+                                } else if (sublocal.size == 1) {
+                                    selectedLocalList.add(sublocal[0])
+                                    checkedList.add(true)
+                                    continue
+                                } else if (sublocal[1].contains('시') && sublocal[1].contains('구')) {
+                                    val str = sublocal[0] + " " + sublocal[1].split("시")[0] + "시"
+                                    if (!selectedLocalList.contains(str)) {
+                                        selectedLocalList.add(str)
+                                        checkedList.add(true)
+                                    }
+                                    continue
+                                } else {
+                                    selectedLocalList.add(tempobj)
+                                    checkedList.add(true)
+                                }
+                            }
+                            (activity as SubActivity).runOnUiThread(Runnable {
+                                locallistadpater.notifyDataSetChanged()
+                                if(id == local_button.id){
+                                    recycler.visibility = View.VISIBLE
+                                }
+                                else if(id ==check_button.id){
+                                    checkButton()
+                                }
+                                else if(id == add_button.id){
+                                    addButton()
+                                }
+                            })
+                            Log.d("response", selectedLocalList.toString())
+                        } catch (e: JSONException) {
+                            Log.d("JSONExceipton", "error")
+                        }
+                    }
+                })
+            }
+            local_button.setOnClickListener {
+                if(!recyclerflag){
+                    searchLocal(local_button.id)
+                }
+                else {
+                    if(recycler.visibility == View.INVISIBLE){
+                        recycler.visibility = View.VISIBLE
+                    }
+                    else{
+                        recycler.visibility = View.INVISIBLE
+                    }
+                }
+            }
+            check_button.setOnClickListener {
+                if (!recyclerflag) {
+                    searchLocal(check_button.id)
+                } else {
+                    checkButton()
+                }
+            }
+            add_button.setOnClickListener{
+                if(!recyclerflag){
+                    searchLocal(add_button.id)
+                }
+                else{
+                    addButton()
+                }
             }
         }
     }
