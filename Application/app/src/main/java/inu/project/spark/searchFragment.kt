@@ -15,6 +15,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.*
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.widget.Toolbar
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -30,6 +31,8 @@ import java.util.*
 import java.util.concurrent.Phaser
 
 class searchFragment : Fragment() {
+    private lateinit var callback: OnBackPressedCallback
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         val mtoolbar = (activity as SubActivity).findViewById<View>(R.id.toolbar_sub) as Toolbar
@@ -39,6 +42,62 @@ class searchFragment : Fragment() {
         }
         return inflater.inflate(R.layout.search_fragment, container, false)
     }
+    private var page = 0
+    private var maxpage = 0
+    private var region:String = ""
+    private var sdate:String = ""
+    private var edate:String = ""
+    private var event:String = ""
+    private var datelist:String = ""
+    private val resultlist:MutableList<String> = mutableListOf()
+    private val locallist:MutableList<String> = mutableListOf()
+    fun setSearch(p:Int,mp:Int,r:String,st:String,ed:String,e:String){
+        this.page = p
+        this.maxpage = mp
+        this.region = r
+        this.sdate = st
+        this.edate = ed
+        this.event = e
+        val tempSDate = sdate.split("/")
+        val tempEDate = edate.split("/")
+        if(tempSDate.size == 3 && tempEDate.size == 3){
+            this.datelist ="${tempSDate[0]}-${tempSDate[1]}-${tempSDate[2]}~${tempEDate[0]}-${tempEDate[1]}-${tempEDate[2]}"
+        }
+        locallist.clear()
+        val tempLocal = region.split("','")
+        locallist.addAll(tempLocal)
+
+    }
+    fun addResultList(m:MutableList<String>){
+        this.resultlist.clear()
+        this.resultlist.addAll(m)
+    }
+    override fun onStart() {
+        callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                (activity as SubActivity).supportFragmentManager.popBackStack()
+            }
+        }
+        if((activity as SubActivity).supportFragmentManager.backStackEntryCount != 0){
+            requireActivity().onBackPressedDispatcher.addCallback(this, callback)
+        }
+        super.onStart()
+    }
+
+    override fun onStop() {
+        callback.remove()
+        super.onStop()
+        page = 0
+        maxpage = 0
+        region = ""
+        sdate = ""
+        edate = ""
+        event = ""
+        datelist = ""
+        resultlist.clear()
+        locallist.clear()
+    }
+    @SuppressLint("UseCompatLoadingForDrawables")
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         val datebutton = requireView().findViewById<View>(R.id.search_time_text)
@@ -53,11 +112,10 @@ class searchFragment : Fragment() {
 
         val api = retrofit.create(spark::class.java)
         //시간 설정
-        var datelist:String = ""
+
         datebutton.setOnClickListener{
             //mindate 서버로부터 가져오기
             var minstr:String = "start"
-
             val builder = Dialog(requireContext())
             builder.setContentView(R.layout.search_date_dialog)
             builder.setTitle("날짜 설정")
@@ -160,7 +218,6 @@ class searchFragment : Fragment() {
 
         }
         // 지역 설정
-        val locallist:MutableList<String> = mutableListOf()
         localbutton.setOnClickListener{
             val builder = Dialog(requireContext())
             builder.setContentView(R.layout.search_local_dialog)
@@ -407,18 +464,14 @@ class searchFragment : Fragment() {
         resultRecycler.layoutManager = layoutManager
         resultRecycler.setHasFixedSize(true)
         // recycler adapter define
-        val resultlist:MutableList<String> = mutableListOf()
         val resultadpater = searchAdapter(resultlist)
         resultRecycler.adapter = resultadpater
         // data list init
 
-        var page = 0
-        var maxpage = 0
-        var region:String = ""
-        var sdate:String = ""
-        var edate:String = ""
-        var event:String = ""
-
+        if (resultlist.size!=0){
+            resultRecycler.visibility = View.VISIBLE
+            resultbuttonset.visibility = View.VISIBLE
+        }
         fun search(selectpage:Int){
             val callGetSearch = api.getSearch(region, sdate, edate, event, page)
             callGetSearch.enqueue(object : Callback<ResultGetSearch> {
@@ -447,7 +500,7 @@ class searchFragment : Fragment() {
                             pagelist[2].background = requireContext().getDrawable(R.drawable.selectedbox)
                             pagelist[2].setTextColor(Color.WHITE)
                         }
-                        else if (selectpage == 1 || selectpage == 2){
+                        else if (selectpage == 1 || selectpage == 2 || selectpage == 3){
                             var x = 1
                             for (p in pagelist) {
                                 p.text = (x).toString()
@@ -516,7 +569,6 @@ class searchFragment : Fragment() {
             page = 1
             val callGetSearch = api.getSearch(region, sdate, edate, event, page)
             callGetSearch.enqueue(object : Callback<ResultGetSearch> {
-                @SuppressLint("UseCompatLoadingForDrawables")
                 override fun onResponse(call: Call<ResultGetSearch>, response: Response<ResultGetSearch>) {
                     if(response.isSuccessful()) {
                         val resData =  Gson().toJson(response.body())
@@ -535,16 +587,11 @@ class searchFragment : Fragment() {
                         resultadpater.notifyDataSetChanged()
                         resultRecycler.visibility = View.VISIBLE
                         resultbuttonset.visibility = View.VISIBLE
-                        // page init
                         var x = 1
-                        for (p in pagelist){
-                            p.text = x.toString()
+                        for (p in pagelist) {
+                            p.text = (x).toString()
                             p.background = requireContext().getDrawable(R.drawable.borderline)
                             p.setTextColor(Color.BLACK)
-                            p.setOnClickListener {
-                                page = Integer.parseInt(p.text.toString())
-                                search(page)
-                            }
                             x++
                         }
                         pagelist[0].background = requireContext().getDrawable(R.drawable.selectedbox)
@@ -559,6 +606,20 @@ class searchFragment : Fragment() {
                 }
             })
         }
+        // page init
+        var x = 1
+        for (p in pagelist){
+            p.text = x.toString()
+            p.background = requireContext().getDrawable(R.drawable.borderline)
+            p.setTextColor(Color.BLACK)
+            p.setOnClickListener {
+                page = Integer.parseInt(p.text.toString())
+                search(page)
+            }
+            x++
+        }
+        pagelist[0].background = requireContext().getDrawable(R.drawable.selectedbox)
+        pagelist[0].setTextColor(Color.WHITE)
         resultprevbutton.setOnClickListener{
             if(page == 1){
                 Toast.makeText(context,"첫번쨰 페이지입니다.",Toast.LENGTH_SHORT).show()

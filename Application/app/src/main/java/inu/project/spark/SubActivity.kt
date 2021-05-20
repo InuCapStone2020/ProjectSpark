@@ -20,14 +20,26 @@ class SubActivity : AppCompatActivity(){
     private val fragmentSearch: searchFragment = searchFragment()
     private val fragmentRepository: repositoryFragment = repositoryFragment()
     private val fragmentMap: mapFragment = mapFragment()
-
+    fun getFragmentMap():mapFragment{
+        return fragmentMap
+    }
+    fun getFragmentSearch():searchFragment{
+        return fragmentSearch
+    }
     fun fragmentmapchange(logititude: Double,latitude: Double){
         fragmentMap.changeSearchedCord(logititude,latitude)
+    }
+    fun fragmentSearchChange(p:Int,mp:Int,r:String,st:String,ed:String,e:String,m:MutableList<String>){
+        fragmentSearch.setSearch(p,mp,r,st,ed,e)
+        fragmentSearch.addResultList(m)
     }
     private lateinit var callback: OnBackPressedCallback
     private fun initMapFragment(){
         if(fragmentMap.getSearchFlag()){
             fragmentMap.setSearchFlag(false)
+        }
+        if(fragmentMap.getResultFlag()){
+            fragmentMap.setResultFlag(false)
         }
     }
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -109,6 +121,9 @@ class SubActivity : AppCompatActivity(){
     }
     fun replaceFragment(fragment: Fragment){
         supportFragmentManager.beginTransaction().replace(R.id.frameLayout, fragment).commit()
+    }
+    fun backAndReplaceFragment(fragment: Fragment){
+        supportFragmentManager.beginTransaction().replace(R.id.frameLayout, fragment).addToBackStack("").commit()
     }
     fun gotoMainActiverty(){
         val i = Intent(this, MainActivity::class.java)

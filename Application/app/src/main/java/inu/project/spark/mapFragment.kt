@@ -1,12 +1,10 @@
 package inu.project.spark
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.location.LocationManager
 import android.os.Bundle
 import android.util.Log
@@ -52,7 +50,6 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
         }
         return inflater.inflate(R.layout.map_fragment, container, false)
     }
-
     private lateinit var mapViewContainer:ViewGroup
     private lateinit var gpsTracker:GpsTracker
     private val REQUIRED_PERMISSIONS = arrayOf<String>(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
@@ -61,12 +58,20 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
     private var displayFlag = false
     private var markerFlag = false
     private var searchFlag = false
-    private var searchedLogitude:Double = 0.0
+    private var resultFlag = false
+    private var searchedLongitude:Double = 0.0
     private var searchedLatitude:Double = 0.0
     private val localhash = hashMapOf<String, Triple<Int, Double, Double>>()
     private val poiarr = mutableListOf<MapPOIItem>()
     private lateinit var POIitemListener:MarkerEventListener
+    private lateinit var POIitemListener2:MarkerEventListener2
 
+    fun setResultFlag(b:Boolean){
+        this.resultFlag = b
+    }
+    fun getResultFlag():Boolean{
+        return resultFlag
+    }
     fun setSearchFlag(b: Boolean){
         this.searchFlag = b
     }
@@ -74,10 +79,11 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
         return searchFlag
     }
 
+
     fun changeSearchedCord(logitude: Double, latitude: Double){
-        searchedLogitude = logitude
+        searchedLongitude = logitude
         searchedLatitude = latitude
-        Log.d("changeSearchedCord", searchedLogitude.toString() + "/" + searchedLatitude.toString())
+        Log.d("changeSearchedCord", searchedLongitude.toString() + "/" + searchedLatitude.toString())
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -204,18 +210,15 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
             searchFlag = true
             val marker1 = mapView.findPOIItemByTag(1)
             searchedLatitude = marker1.mapPoint.mapPointGeoCoord.latitude.toDouble()
-            searchedLogitude = marker1.mapPoint.mapPointGeoCoord.longitude.toDouble()
+            searchedLongitude = marker1.mapPoint.mapPointGeoCoord.longitude.toDouble()
             (activity as SubActivity).supportFragmentManager.beginTransaction().replace(R.id.frameLayout, mapsearchFragment()).addToBackStack("map").commit()
         }
         if(searchFlag){
+            searchFlag = false
             // inactive button
             viewmapbutton.visibility = View.INVISIBLE
             searchmapbutton.visibility = View.INVISIBLE
-            // if displayflag is true then inactive this function
-            if (displayFlag){
-                mapView.removeAllPOIItems()
-                displayFlag = !displayFlag
-            }
+
             // active button
             markerFlag = true
             requireView().findViewById<View>(R.id.search_map_text).visibility = View.VISIBLE
@@ -225,7 +228,7 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
             val marker1 = MapPOIItem()
             marker1.itemName = ""
             marker1.tag = 1
-            val mappoint = MapPoint.mapPointWithGeoCoord(searchedLatitude, searchedLogitude)
+            val mappoint = MapPoint.mapPointWithGeoCoord(searchedLatitude, searchedLongitude)
             marker1.mapPoint =mappoint
             marker1.markerType = MapPOIItem.MarkerType.BluePin
             marker1.isDraggable = false
@@ -256,6 +259,20 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
             marker1.isDraggable = false
             mapView.addPOIItem(marker1)
         }
+        val seekbar = requireView().findViewById<SeekBar>(R.id.seekBar2)
+        val seekText = requireView().findViewById<View>(R.id.seekText) as TextView
+        val check_button = requireView().findViewById<View>(R.id.check_map_button)
+        val add_button = requireView().findViewById<View>(R.id.addlocal_map_button)
+        val local_button = requireView().findViewById<View>(R.id.map_local_list)
+        val recycler = requireView().findViewById<View>(R.id.locallist) as RecyclerView
+        recycler.layoutManager = LinearLayoutManager(context)
+        val selectedLocalList = mutableListOf<String>()
+        val checkedList = mutableListOf<Boolean>()
+        val locallistadpater = mapListAdapter(selectedLocalList,checkedList)
+        recycler.adapter = locallistadpater
+        recycler.setHasFixedSize(true)
+        var recyclerflag = false
+
         nextmapbutton.setOnClickListener{
             // inactive button
             val circle = MapCircle(mapView.findPOIItemByTag(1).mapPoint, 0, R.color.black, android.graphics.Color.argb(100, 10, 10, 10))
@@ -268,22 +285,9 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
             localsearchbutton.visibility = View.INVISIBLE
             // active button, function
             requireView().findViewById<View>(R.id.seek_layer).visibility = View.VISIBLE
-            val seekbar = requireView().findViewById<SeekBar>(R.id.seekBar2)
-            val seekText = requireView().findViewById<View>(R.id.seekText) as TextView
-            val check_button = requireView().findViewById<View>(R.id.check_map_button)
-            val add_button = requireView().findViewById<View>(R.id.addlocal_map_button)
-            val local_button = requireView().findViewById<View>(R.id.map_local_list)
-            val recycler = requireView().findViewById<View>(R.id.locallist) as RecyclerView
             check_button.visibility = View.VISIBLE
             add_button.visibility = View.VISIBLE
             local_button.visibility = View.VISIBLE
-            recycler.layoutManager = LinearLayoutManager(context)
-            val selectedLocalList = mutableListOf<String>()
-            val checkedList = mutableListOf<Boolean>()
-            val locallistadpater = mapListAdapter(selectedLocalList,checkedList)
-            recycler.adapter = locallistadpater
-            recycler.setHasFixedSize(true)
-            var recyclerflag = false
             seekbar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                     seekText.text = ("${progress/100} . ${progress%100}km")
@@ -301,171 +305,226 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
                     recyclerflag = false
                 }
             })
-            fun checkButton(){
-                var region: String = ""
-                val time = Calendar.getInstance()
-                val edate = "${time.get(Calendar.YEAR)}/${time.get(Calendar.MONTH) + 1}/${time.get(Calendar.DATE)}"
-                time.add(Calendar.DATE, -7)
-                val sdate = "${time.get(Calendar.YEAR)}/${time.get(Calendar.MONTH) + 1}/${time.get(Calendar.DATE)}"
-                val event = "전염병','자연 재해','기타"
-                val page = 1
+        }
+        if(resultFlag){
+            resultFlag = false
+            nowmapbutton.visibility = View.INVISIBLE
+            viewmapbutton.visibility = View.INVISIBLE
+            searchmapbutton.visibility = View.INVISIBLE
 
-                val check = locallistadpater.getCheckList()
-                val tempList = mutableListOf<String>()
-                for (i in 0 until check.size) {
-                    if (check[i]) {
-                        tempList.add(selectedLocalList[i])
-                    }
+
+            val marker1 = MapPOIItem()
+            marker1.itemName = ""
+            marker1.tag = 1
+            val mappoint = MapPoint.mapPointWithGeoCoord(searchedLatitude, searchedLongitude)
+            marker1.mapPoint =mappoint
+            marker1.markerType = MapPOIItem.MarkerType.BluePin
+            marker1.isDraggable = false
+            mapView.addPOIItem(marker1)
+            mapView.setMapCenterPoint(mappoint, true)
+
+
+            val circle = MapCircle(mapView.findPOIItemByTag(1).mapPoint, 0, R.color.black, android.graphics.Color.argb(100, 10, 10, 10))
+            circle.tag = 0
+            mapView.addCircle(circle)
+
+            requireView().findViewById<View>(R.id.seek_layer).visibility = View.VISIBLE
+            check_button.visibility = View.VISIBLE
+            add_button.visibility = View.VISIBLE
+            local_button.visibility = View.VISIBLE
+            seekbar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                    seekText.text = ("${progress/100} . ${progress%100}km")
+                    circle.radius = progress * 10
+                    mapView.removeAllCircles()
+                    mapView.addCircle(circle)
                 }
-                if (tempList.size == 0) {
-                    Toast.makeText(context, "선택된 지역이 없습니다.", Toast.LENGTH_SHORT).show()
-                } else {
-                    region = tempList[0]
-                    for (i in 1 until tempList.size) {
-                        region += "','" + tempList[i]
-                    }
-                    val baseURL = MyApplication.baseurl
-                    val retrofit = Retrofit.Builder()
-                            .baseUrl(baseURL)
-                            .addConverterFactory(GsonConverterFactory.create())
-                            .build()
-                    val api = retrofit.create(spark::class.java)
-                    val callGetSearch = api.getSearch(region, sdate, edate, event, page)
-                    callGetSearch.enqueue(object : Callback<ResultGetSearch> {
-                        @SuppressLint("UseCompatLoadingForDrawables")
-                        override fun onResponse(call: Call<ResultGetSearch>, response: Response<ResultGetSearch>) {
-                            if (response.isSuccessful()) {
-                                try {
-                                    val resData = Gson().toJson(response.body())
-                                    val cnt = JSONObject(resData).getJSONArray("cnt").getJSONObject(0).getInt("count")
-                                    mapView.findPOIItemByTag(1).itemName = "선택 지역 : $cnt 건"
-                                    mapView.selectPOIItem(mapView.findPOIItemByTag(1), true)
-                                } catch (e: JSONException) {
-                                    e.printStackTrace()
-                                }
 
-                            } else {
-                                Log.d("GetSearch", "responseFail")
-                            }
-                        }
-                        override fun onFailure(call: Call<ResultGetSearch>, t: Throwable) {
-                            Log.e("GetSearch", "onFailure")
-                        }
-                    })
+                override fun onStartTrackingTouch(seekBar: SeekBar?) {
+
+                }
+
+                override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                    recycler.visibility = View.INVISIBLE
+                    recyclerflag = false
+                }
+            })
+
+        }
+        fun checkButton(){
+            var region: String = ""
+            val time = Calendar.getInstance()
+            val edate = "${time.get(Calendar.YEAR)}/${time.get(Calendar.MONTH) + 1}/${time.get(Calendar.DATE)}"
+            time.add(Calendar.DATE, -7)
+            val sdate = "${time.get(Calendar.YEAR)}/${time.get(Calendar.MONTH) + 1}/${time.get(Calendar.DATE)}"
+            val event = "전염병','자연 재해','기타"
+            val page = 1
+
+            val check = locallistadpater.getCheckList()
+            val tempList = mutableListOf<String>()
+            for (i in 0 until check.size) {
+                if (check[i]) {
+                    tempList.add(selectedLocalList[i])
                 }
             }
-            fun addButton(){
-                val check = locallistadpater.getCheckList()
-                val tempList = mutableListOf<String>()
-                for (i in 0 until check.size){
-                    if(check[i]){
-                        tempList.add(selectedLocalList[i])
-                    }
+            if (tempList.size == 0) {
+                Toast.makeText(context, "선택된 지역이 없습니다.", Toast.LENGTH_SHORT).show()
+            } else {
+                region = tempList[0]
+                for (i in 1 until tempList.size) {
+                    region += "','" + tempList[i]
                 }
-                for (i in 0 until tempList.size){
-                    val localTemp = tempList[i].split(" ")
-                    if(localTemp.size == 1){
-                        MyApplication.prefs.savelocal(localTemp[0],"전체")
-                    }
-                    else{
-                        MyApplication.prefs.savelocal(localTemp[0],localTemp[1])
-                    }
-                }
-                Toast.makeText(context,"총 ${tempList.size}개의 지역이 추가 되었습니다.",Toast.LENGTH_SHORT).show()
-            }
-            fun searchLocal(id:Int){
-                recyclerflag = true
-                selectedLocalList.clear()
-                checkedList.clear()
-                val x = mapView.findPOIItemByTag(1).mapPoint.mapPointGeoCoord.longitude
-                val y = mapView.findPOIItemByTag(1).mapPoint.mapPointGeoCoord.latitude
-                val radius = mapView.findCircleByTag(0).radius
-                val url = "http://api.vworld.kr/req/data?service=data&request=GetFeature&data=LT_C_ADSIGG_INFO&key=84F7B2A4-03FC-34AA-B039-11693223A532&&domain=inu.project.spark&crs=EPSG:4019&size=1000" +
-                        "&geomFilter=point($x $y)&buffer=$radius"
-                val client = OkHttpClient()
-                val request = Request.Builder().url(url).build()
-                client.newCall(request).enqueue(object : okhttp3.Callback {
-                    override fun onFailure(call: okhttp3.Call, e: IOException) {
-                        Toast.makeText(requireContext(), "connection failed", Toast.LENGTH_SHORT).show()
-                    }
-
-                    override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
-                        val tempstr = response.body?.string().toString()
-                        Log.d("vworld", tempstr)
-                        try {
-                            val json = JSONObject(tempstr).getJSONObject("response").getJSONObject("result").getJSONObject("featureCollection").getJSONArray("features")
-                            for (i in 0 until json.length()) {
-                                val tempobj = json.getJSONObject(i).getJSONObject("properties").getString("full_nm")
-                                val sublocal = tempobj.split(" ")
-                                if (sublocal.size > 2) {
-                                    val str = sublocal[0] + " " + sublocal[1]
-                                    if (!selectedLocalList.contains(str)) {
-                                        selectedLocalList.add(str)
-                                        checkedList.add(true)
-                                    }
-                                    continue
-                                } else if (sublocal.size == 1) {
-                                    selectedLocalList.add(sublocal[0])
-                                    checkedList.add(true)
-                                    continue
-                                } else if (sublocal[1].contains('시') && sublocal[1].contains('구')) {
-                                    val str = sublocal[0] + " " + sublocal[1].split("시")[0] + "시"
-                                    if (!selectedLocalList.contains(str)) {
-                                        selectedLocalList.add(str)
-                                        checkedList.add(true)
-                                    }
-                                    continue
-                                } else {
-                                    selectedLocalList.add(tempobj)
-                                    checkedList.add(true)
+                val baseURL = MyApplication.baseurl
+                val retrofit = Retrofit.Builder()
+                    .baseUrl(baseURL)
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build()
+                val api = retrofit.create(spark::class.java)
+                val callGetSearch = api.getSearch(region, sdate, edate, event, page)
+                callGetSearch.enqueue(object : Callback<ResultGetSearch> {
+                    override fun onResponse(call: Call<ResultGetSearch>, response: Response<ResultGetSearch>) {
+                        if (response.isSuccessful()) {
+                            try {
+                                val resData = Gson().toJson(response.body())
+                                val cnt = JSONObject(resData).getJSONArray("cnt").getJSONObject(0).getInt("count")
+                                mapView.findPOIItemByTag(1).itemName = "선택 지역 : $cnt 건"
+                                mapView.selectPOIItem(mapView.findPOIItemByTag(1), true)
+                                val resultlist = mutableListOf<String>()
+                                val tempobject = JSONObject(resData).getJSONArray("result")
+                                for (i in 0 until tempobject.length()){
+                                    resultlist.add(tempobject.getJSONObject(i).toString())
                                 }
+                                var maxpage = cnt/10 + 1
+                                if (cnt%10 == 0){
+                                    maxpage--
+                                }
+                                POIitemListener2 = MarkerEventListener2((activity as SubActivity),maxpage,region,sdate,edate,event,resultlist)
+                                mapView.setPOIItemEventListener(POIitemListener2)
+                            } catch (e: JSONException) {
+                                e.printStackTrace()
                             }
-                            (activity as SubActivity).runOnUiThread(Runnable {
-                                locallistadpater.notifyDataSetChanged()
-                                if(id == local_button.id){
-                                    recycler.visibility = View.VISIBLE
-                                }
-                                else if(id ==check_button.id){
-                                    checkButton()
-                                }
-                                else if(id == add_button.id){
-                                    addButton()
-                                }
-                            })
-                            Log.d("response", selectedLocalList.toString())
-                        } catch (e: JSONException) {
-                            Log.d("JSONExceipton", "error")
+
+                        } else {
+                            Log.d("GetSearch", "responseFail")
                         }
+                    }
+                    override fun onFailure(call: Call<ResultGetSearch>, t: Throwable) {
+                        Log.e("GetSearch", "onFailure")
                     }
                 })
             }
-            local_button.setOnClickListener {
-                if(!recyclerflag){
-                    searchLocal(local_button.id)
-                }
-                else {
-                    if(recycler.visibility == View.INVISIBLE){
-                        recycler.visibility = View.VISIBLE
-                    }
-                    else{
-                        recycler.visibility = View.INVISIBLE
-                    }
+        }
+        fun addButton(){
+            val check = locallistadpater.getCheckList()
+            val tempList = mutableListOf<String>()
+            for (i in 0 until check.size){
+                if(check[i]){
+                    tempList.add(selectedLocalList[i])
                 }
             }
-            check_button.setOnClickListener {
-                if (!recyclerflag) {
-                    searchLocal(check_button.id)
-                } else {
-                    checkButton()
-                }
-            }
-            add_button.setOnClickListener{
-                if(!recyclerflag){
-                    searchLocal(add_button.id)
+            for (i in 0 until tempList.size){
+                val localTemp = tempList[i].split(" ")
+                if(localTemp.size == 1){
+                    MyApplication.prefs.savelocal(localTemp[0],"전체")
                 }
                 else{
-                    addButton()
+                    MyApplication.prefs.savelocal(localTemp[0],localTemp[1])
                 }
+            }
+            Toast.makeText(context,"총 ${tempList.size}개의 지역이 추가 되었습니다.",Toast.LENGTH_SHORT).show()
+        }
+        fun searchLocal(id:Int){
+            recyclerflag = true
+            selectedLocalList.clear()
+            checkedList.clear()
+            val x = mapView.findPOIItemByTag(1).mapPoint.mapPointGeoCoord.longitude
+            val y = mapView.findPOIItemByTag(1).mapPoint.mapPointGeoCoord.latitude
+            val radius = mapView.findCircleByTag(0).radius
+            val url = "http://api.vworld.kr/req/data?service=data&request=GetFeature&data=LT_C_ADSIGG_INFO&key=84F7B2A4-03FC-34AA-B039-11693223A532&&domain=inu.project.spark&crs=EPSG:4019&size=1000" +
+                    "&geomFilter=point($x $y)&buffer=$radius"
+            val client = OkHttpClient()
+            val request = Request.Builder().url(url).build()
+            client.newCall(request).enqueue(object : okhttp3.Callback {
+                override fun onFailure(call: okhttp3.Call, e: IOException) {
+                    Toast.makeText(requireContext(), "connection failed", Toast.LENGTH_SHORT).show()
+                }
+
+                override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                    val tempstr = response.body?.string().toString()
+                    Log.d("vworld", tempstr)
+                    try {
+                        val json = JSONObject(tempstr).getJSONObject("response").getJSONObject("result").getJSONObject("featureCollection").getJSONArray("features")
+                        for (i in 0 until json.length()) {
+                            val tempobj = json.getJSONObject(i).getJSONObject("properties").getString("full_nm")
+                            val sublocal = tempobj.split(" ")
+                            if (sublocal.size > 2) {
+                                val str = sublocal[0] + " " + sublocal[1]
+                                if (!selectedLocalList.contains(str)) {
+                                    selectedLocalList.add(str)
+                                    checkedList.add(true)
+                                }
+                                continue
+                            } else if (sublocal.size == 1) {
+                                selectedLocalList.add(sublocal[0])
+                                checkedList.add(true)
+                                continue
+                            } else if (sublocal[1].contains('시') && sublocal[1].contains('구')) {
+                                val str = sublocal[0] + " " + sublocal[1].split("시")[0] + "시"
+                                if (!selectedLocalList.contains(str)) {
+                                    selectedLocalList.add(str)
+                                    checkedList.add(true)
+                                }
+                                continue
+                            } else {
+                                selectedLocalList.add(tempobj)
+                                checkedList.add(true)
+                            }
+                        }
+                        (activity as SubActivity).runOnUiThread(Runnable {
+                            locallistadpater.notifyDataSetChanged()
+                            if(id == local_button.id){
+                                recycler.visibility = View.VISIBLE
+                            }
+                            else if(id ==check_button.id){
+                                checkButton()
+                            }
+                            else if(id == add_button.id){
+                                addButton()
+                            }
+                        })
+                        Log.d("response", selectedLocalList.toString())
+                    } catch (e: JSONException) {
+                        Log.d("JSONExceipton", "error")
+                    }
+                }
+            })
+        }
+        local_button.setOnClickListener {
+            if(!recyclerflag){
+                searchLocal(local_button.id)
+            }
+            else {
+                if(recycler.visibility == View.INVISIBLE){
+                    recycler.visibility = View.VISIBLE
+                }
+                else{
+                    recycler.visibility = View.INVISIBLE
+                }
+            }
+        }
+        check_button.setOnClickListener {
+            if (!recyclerflag) {
+                searchLocal(check_button.id)
+            } else {
+                checkButton()
+            }
+        }
+        add_button.setOnClickListener{
+            if(!recyclerflag){
+                searchLocal(add_button.id)
+            }
+            else{
+                addButton()
             }
         }
     }
@@ -492,9 +551,10 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
     }
 
     override fun onStop() {
-        if(!searchFlag){
+        if(!searchFlag || !resultFlag){
             mapViewContainer.removeAllViews()
         }
+        Log.d("resultFlag",resultFlag.toString())
         super.onStop()
 
     }
@@ -759,9 +819,38 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
                 }
             }
         }
-
         override fun onDraggablePOIItemMoved(p0: MapView?, p1: MapPOIItem?, p2: MapPoint?) {
+        }
+    }
+    class MarkerEventListener2(activity: SubActivity, mp:Int,re:String,sd:String,ed:String,e:String,r:MutableList<String>):MapView.POIItemEventListener{
+        private val a = activity
+        private val fragment = a.getFragmentMap()
+        private val maxpage = mp
+        private val region = re
+        private val sdate = sd
+        private val edate = ed
+        private val event = e
+        private val resultlist = r
 
+        override fun onPOIItemSelected(p0: MapView?, p1: MapPOIItem?) {
+
+        }
+
+        override fun onCalloutBalloonOfPOIItemTouched(p0: MapView?, p1: MapPOIItem?) {
+
+        }
+
+        override fun onCalloutBalloonOfPOIItemTouched(p0: MapView?, p1: MapPOIItem?, p2: MapPOIItem.CalloutBalloonButtonType?) {
+            if(p1!=null){
+                if(p1.tag == 1 && p1.itemName != ""){
+                    fragment.resultFlag = true
+                    a.fragmentSearchChange(1,maxpage,region,sdate,edate,event,resultlist)
+
+                    a.backAndReplaceFragment(a.getFragmentSearch())
+                }
+            }
+        }
+        override fun onDraggablePOIItemMoved(p0: MapView?, p1: MapPOIItem?, p2: MapPoint?) {
         }
     }
 }
