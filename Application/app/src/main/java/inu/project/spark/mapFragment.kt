@@ -106,7 +106,7 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
             }
 
         })
-        POIitemListener = MarkerEventListener(requireContext())
+        POIitemListener = MarkerEventListener((activity as SubActivity))
         mapView.setPOIItemEventListener(POIitemListener)
         nowmapbutton.setOnClickListener{
             // service and permission check function
@@ -355,7 +355,7 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
             var region: String = ""
             val time = Calendar.getInstance()
             val edate = "${time.get(Calendar.YEAR)}/${time.get(Calendar.MONTH) + 1}/${time.get(Calendar.DATE)}"
-            time.add(Calendar.DATE, -7)
+            time.add(Calendar.DATE, -6)
             val sdate = "${time.get(Calendar.YEAR)}/${time.get(Calendar.MONTH) + 1}/${time.get(Calendar.DATE)}"
             val event = "전염병','자연 재해','기타"
             val page = 1
@@ -760,8 +760,8 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
 
     }
 
-    class MarkerEventListener(context: Context):MapView.POIItemEventListener{
-        private val c = context
+    class MarkerEventListener(activity: SubActivity):MapView.POIItemEventListener{
+        private val a = activity
         override fun onPOIItemSelected(p0: MapView?, p1: MapPOIItem?) {
 
         }
@@ -774,6 +774,49 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
             if(p1!=null){
                 if(p1.tag == 0 || p1.tag == 2){
                     Log.d("onCalloutBalloonOfPOIItemTouched + p2", "true")
+                    val region = p1.itemName.split(" : ")[0]
+                    val retrofit = Retrofit.Builder()
+                            .baseUrl(MyApplication.baseurl)
+                            .addConverterFactory(GsonConverterFactory.create())
+                            .build()
+                    val time = Calendar.getInstance()
+                    val edate = "${time.get(Calendar.YEAR)}/${time.get(Calendar.MONTH) + 1}/${time.get(Calendar.DATE)}"
+                    time.add(Calendar.DATE, -6)
+                    val sdate = "${time.get(Calendar.YEAR)}/${time.get(Calendar.MONTH) + 1}/${time.get(Calendar.DATE)}"
+                    val event = "전염병','자연 재해','기타"
+                    val api = retrofit.create(spark::class.java)
+                    val callGetSearch = api.getSearch(region,sdate,edate,event,1)
+                    callGetSearch.enqueue(object : Callback<ResultGetSearch> {
+                        override fun onResponse(call: Call<ResultGetSearch>, response: Response<ResultGetSearch>) {
+                            if (response.isSuccessful()) {
+                                try {
+                                    val resData = Gson().toJson(response.body())
+                                    val cnt = JSONObject(resData).getJSONArray("cnt").getJSONObject(0).getInt("count")
+                                    val resultlist = mutableListOf<String>()
+                                    val tempobject = JSONObject(resData).getJSONArray("result")
+                                    for (i in 0 until tempobject.length()){
+                                        resultlist.add(tempobject.getJSONObject(i).toString())
+                                    }
+                                    var maxpage = cnt/10 + 1
+                                    if (cnt%10 == 0){
+                                        maxpage--
+                                    }
+                                    a.fragmentSearchChange(1,maxpage,region,sdate,edate,event,resultlist)
+                                    a.backAndReplaceFragment(a.getFragmentSearch())
+
+                                } catch (e: JSONException) {
+                                    e.printStackTrace()
+                                }
+
+                            } else {
+                                Log.d("GetSearch", "responseFail")
+                            }
+                        }
+                        override fun onFailure(call: Call<ResultGetSearch>, t: Throwable) {
+                            Log.e("GetSearch", "onFailure")
+                        }
+                    })
+                    /*
                     val builder = Dialog(c)
                     builder.setContentView(R.layout.search_local_dialog)
                     builder.setTitle(p1.itemName.toString())
@@ -816,6 +859,8 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
                     })
                     builder.show()
                     //Toast.makeText(c,p1.itemName,Toast.LENGTH_SHORT).show()
+
+                     */
                 }
             }
         }

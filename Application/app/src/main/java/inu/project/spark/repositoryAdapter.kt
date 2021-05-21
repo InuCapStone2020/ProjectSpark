@@ -65,6 +65,17 @@ class repositoryAdapter(list:MutableList<Contacts>,checkedlist:MutableList<Boole
         val temptime = contact.M_DATE + " " + contact.M_TIME
         val tempcheck = checklist[position]
         val tempregionarr = tempregion.split(" ")
+
+        if(contact.EVENT.equals("전염병")){
+            holder.item_all.setBackgroundResource(R.drawable.round_borderline_red)
+        }
+        else if(contact.EVENT.equals("자연재해")){
+            holder.item_all.setBackgroundResource(R.drawable.round_borderline_blue)
+        }
+        else{
+            holder.item_all.setBackgroundResource(R.drawable.round_borderline_gray)
+        }
+
         var x = ""
         for (i in tempregionarr.indices){
             x += "\n"+tempregionarr[i]
@@ -90,6 +101,7 @@ class repositoryAdapter(list:MutableList<Contacts>,checkedlist:MutableList<Boole
         else{
             holder.item_check.visibility = View.GONE
         }
+
     }
     inner class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView){
         var item_region: TextView

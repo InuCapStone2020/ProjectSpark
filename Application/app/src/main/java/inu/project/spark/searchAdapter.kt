@@ -1,5 +1,6 @@
 package inu.project.spark
 
+import android.graphics.drawable.Drawable
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -35,7 +36,15 @@ class searchAdapter(list:MutableList<String>) : RecyclerView.Adapter<searchAdapt
             val tempdate = tempobject.get(date).toString().split("T")[0]
             val temptime = tempobject.get(time).toString()
             val tempdatetime = "$tempdate $temptime"
-
+            if(tempobject.get("EVENT").toString().equals("전염병")){
+                holder.item_all.setBackgroundResource(R.drawable.round_borderline_red)
+            }
+            else if(tempobject.get("EVENT").toString().equals("자연재해")){
+                holder.item_all.setBackgroundResource(R.drawable.round_borderline_blue)
+            }
+            else{
+                holder.item_all.setBackgroundResource(R.drawable.round_borderline_gray)
+            }
             val tempregionarr = tempregion.split(" ")
             var x = ""
             for (i in tempregionarr.indices){
@@ -49,9 +58,7 @@ class searchAdapter(list:MutableList<String>) : RecyclerView.Adapter<searchAdapt
             holder.item_region.text = x
             holder.item_body.text = y
             holder.item_date.text = tempdatetime
-            holder.item_all.setOnClickListener {
 
-            }
         }
         catch(e:JSONException){
             e.printStackTrace()
