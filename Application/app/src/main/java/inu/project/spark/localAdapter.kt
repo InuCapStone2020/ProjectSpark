@@ -42,11 +42,12 @@ class localAdapter(list:MutableList<String>) : RecyclerView.Adapter<localAdapter
     inner class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView){
         var textView1:TextView
         var textView2:TextView
-        var button1:Button
+        var button1:View
         init{
             textView1 = itemView.findViewById<TextView>(R.id.local_text1)
             textView2 = itemView.findViewById<TextView>(R.id.local_text2)
-            button1 = itemView.findViewById<Button>(R.id.local_delete_button)
+            button1 = itemView.findViewById<View>(R.id.local_delete_button)
+            button1.isClickable = true
             button1.setOnClickListener{
                 var position = adapterPosition
                 remove(position)

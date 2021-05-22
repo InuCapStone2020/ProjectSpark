@@ -18,7 +18,7 @@
             android:gravity="center"
             android:text="시작날짜"
             android:textColor="@color/black"
-            android:textSize="20sp" />
+            android:textSize="24sp" />
 
         <TextView
             android:id="@+id/textView8"
@@ -29,7 +29,7 @@
             android:gravity="center"
             android:text="종료날짜"
             android:textColor="@color/black"
-            android:textSize="20sp" />
+            android:textSize="24sp" />
     </LinearLayout>
 
     <LinearLayout
@@ -45,7 +45,7 @@
             android:background="@drawable/borderline"
             android:gravity="center"
             android:textColor="@color/black"
-            android:textSize="20sp" />
+            android:textSize="24sp" />
 
         <TextView
             android:id="@+id/searchdialog_enddate"
@@ -55,7 +55,7 @@
             android:background="@drawable/borderline"
             android:gravity="center"
             android:textColor="@color/black"
-            android:textSize="20sp" />
+            android:textSize="24sp" />
     </LinearLayout>
 
     <LinearLayout

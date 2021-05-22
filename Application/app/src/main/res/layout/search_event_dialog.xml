@@ -2,35 +2,41 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@drawable/borderline"
     android:orientation="vertical">
 
     <CheckBox
         android:id="@+id/search_event_chkall"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="전체선택" />
+        android:text="전체선택"
+        android:textSize="18sp" />
 
     <CheckBox
         android:id="@+id/search_event_chk1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="전염병" />
+        android:text="전염병"
+        android:textSize="18sp" />
 
     <CheckBox
         android:id="@+id/search_event_chk2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="자연재해" />
+        android:text="자연재해"
+        android:textSize="18sp" />
 
     <CheckBox
         android:id="@+id/search_event_chk3"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="기타" />
+        android:text="기타"
+        android:textSize="18sp" />
 
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="match_parent"
+        android:layout_gravity="center"
         android:orientation="horizontal">
 
         <Button

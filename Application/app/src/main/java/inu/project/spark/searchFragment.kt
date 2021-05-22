@@ -231,6 +231,7 @@ class searchFragment : Fragment() {
             add.setOnClickListener{
                 val localbuilder = Dialog(requireContext())
                 localbuilder.setContentView(R.layout.local_dialog)
+                localbuilder.window?.attributes?.width = WindowManager.LayoutParams.MATCH_PARENT
                 localbuilder.show()
                 val localspinner1: Spinner = localbuilder.findViewById(R.id.local_spinner1) as Spinner
                 val localspinner2: Spinner = localbuilder.findViewById(R.id.local_spinner2) as Spinner
@@ -350,8 +351,8 @@ class searchFragment : Fragment() {
                     localbuilder.dismiss()
                 }
             }
-            val close = builder.findViewById<View>(R.id.searchdialog_ok_button)
-            close.setOnClickListener{
+            val ok_button = builder.findViewById<View>(R.id.search_local_ok)
+            ok_button.setOnClickListener {
                 builder.dismiss()
             }
         }

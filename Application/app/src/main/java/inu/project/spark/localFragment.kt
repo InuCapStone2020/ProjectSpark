@@ -14,6 +14,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.*
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.widget.Toolbar
@@ -85,6 +86,7 @@ class localFragment : Fragment() {
         add_button.setOnClickListener {
             val builder = Dialog(requireContext())
             builder.setContentView(R.layout.local_dialog)
+            builder.window?.attributes?.width = WindowManager.LayoutParams.MATCH_PARENT
             builder.show()
             val localspinner1: Spinner = builder.findViewById(R.id.local_spinner1) as Spinner
             val localspinner2: Spinner = builder.findViewById(R.id.local_spinner2) as Spinner

@@ -26,10 +26,10 @@ class searchdialogAdapter(list:MutableList<String>) : RecyclerView.Adapter<searc
     }
     inner class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView){
         var textView: TextView
-        var button1: Button
+        var button1: View
         init{
             textView = itemView.findViewById<TextView>(R.id.searchdailog_text_item)
-            button1 = itemView.findViewById<Button>(R.id.searchdailog_button)
+            button1 = itemView.findViewById<View>(R.id.searchdailog_button)
             button1.setOnClickListener{
                 val position = adapterPosition
                 remove(position)

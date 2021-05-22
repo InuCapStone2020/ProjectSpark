@@ -15,6 +15,7 @@ import android.view.WindowManager
 import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -43,6 +44,7 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
             inflater: LayoutInflater, container: ViewGroup?,
             savedInstanceState: Bundle?
     ): View? {
+        backPressedMainActivity()
         val mtoolbar = (activity as SubActivity).findViewById<View>(R.id.toolbar_sub) as Toolbar
         mtoolbar.setNavigationOnClickListener {
             val i = Intent(context, MainActivity::class.java)
@@ -65,6 +67,7 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
     private val poiarr = mutableListOf<MapPOIItem>()
     private lateinit var POIitemListener:MarkerEventListener
     private lateinit var POIitemListener2:MarkerEventListener2
+    private lateinit var callback: OnBackPressedCallback
 
     fun setResultFlag(b:Boolean){
         this.resultFlag = b
@@ -78,7 +81,6 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
     fun getSearchFlag():Boolean{
         return searchFlag
     }
-
 
     fun changeSearchedCord(logitude: Double, latitude: Double){
         searchedLongitude = logitude
@@ -99,12 +101,10 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
                 Log.d("getCalloutBallon", "true")
                 return null
             }
-
             override fun getPressedCalloutBalloon(p0: MapPOIItem?): View? {
                 Log.d("getPressedCalloutBallon", "true")
                 return null
             }
-
         })
         POIitemListener = MarkerEventListener((activity as SubActivity))
         mapView.setPOIItemEventListener(POIitemListener)
@@ -203,9 +203,24 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
             }
             displayFlag = !displayFlag
         }
+
         val searchmapbutton = requireView().findViewById<View>(R.id.search_map_button)
         val nextmapbutton = requireView().findViewById<View>(R.id.next_map_button)
         val localsearchbutton = requireView().findViewById<View>(R.id.localsearch_map_button)
+        fun backPressedSearchMap(){
+            callback = object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    viewmapbutton.visibility = View.VISIBLE
+                    searchmapbutton.visibility = View.VISIBLE
+                    requireView().findViewById<View>(R.id.search_map_text).visibility = View.INVISIBLE
+                    nextmapbutton.visibility = View.INVISIBLE
+                    localsearchbutton.visibility = View.INVISIBLE
+                    mapView.removeAllPOIItems()
+                    backPressedMainActivity()
+                }
+            }
+            requireActivity().onBackPressedDispatcher.addCallback(requireActivity(), callback)
+        }
         localsearchbutton.setOnClickListener {
             searchFlag = true
             val marker1 = mapView.findPOIItemByTag(1)
@@ -220,6 +235,7 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
             searchmapbutton.visibility = View.INVISIBLE
 
             // active button
+            backPressedSearchMap()
             markerFlag = true
             requireView().findViewById<View>(R.id.search_map_text).visibility = View.VISIBLE
             nextmapbutton.visibility = View.VISIBLE
@@ -246,6 +262,7 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
                 displayFlag = !displayFlag
             }
             // active button
+            backPressedSearchMap()
             markerFlag = true
             requireView().findViewById<View>(R.id.search_map_text).visibility = View.VISIBLE
             nextmapbutton.visibility = View.VISIBLE
@@ -272,18 +289,39 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
         recycler.adapter = locallistadpater
         recycler.setHasFixedSize(true)
         var recyclerflag = false
-
+        fun backPressedNextMap(){
+            callback = object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    requireActivity().onBackPressedDispatcher.addCallback(requireActivity(), callback)
+                    markerFlag = true
+                    requireView().findViewById<View>(R.id.search_map_text).visibility = View.VISIBLE
+                    nowmapbutton.visibility = View.VISIBLE
+                    nextmapbutton.visibility = View.VISIBLE
+                    localsearchbutton.visibility = View.VISIBLE
+                    recyclerflag = false
+                    mapView.removeAllCircles()
+                    requireView().findViewById<View>(R.id.seek_layer).visibility = View.INVISIBLE
+                    check_button.visibility = View.INVISIBLE
+                    add_button.visibility = View.INVISIBLE
+                    local_button.visibility = View.INVISIBLE
+                    recycler.visibility = View.INVISIBLE
+                    backPressedSearchMap()
+                }
+            }
+            requireActivity().onBackPressedDispatcher.addCallback(requireActivity(), callback)
+        }
         nextmapbutton.setOnClickListener{
             // inactive button
-            val circle = MapCircle(mapView.findPOIItemByTag(1).mapPoint, 0, R.color.black, android.graphics.Color.argb(100, 10, 10, 10))
-            circle.tag = 0
-            mapView.addCircle(circle)
             markerFlag = false
             requireView().findViewById<View>(R.id.search_map_text).visibility = View.INVISIBLE
             nowmapbutton.visibility = View.INVISIBLE
             nextmapbutton.visibility = View.INVISIBLE
             localsearchbutton.visibility = View.INVISIBLE
             // active button, function
+            backPressedNextMap()
+            val circle = MapCircle(mapView.findPOIItemByTag(1).mapPoint, 0, R.color.black, android.graphics.Color.argb(100, 10, 10, 10))
+            circle.tag = 0
+            mapView.addCircle(circle)
             requireView().findViewById<View>(R.id.seek_layer).visibility = View.VISIBLE
             check_button.visibility = View.VISIBLE
             add_button.visibility = View.VISIBLE
@@ -312,7 +350,7 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
             viewmapbutton.visibility = View.INVISIBLE
             searchmapbutton.visibility = View.INVISIBLE
 
-
+            backPressedNextMap()
             val marker1 = MapPOIItem()
             marker1.itemName = ""
             marker1.tag = 1
@@ -528,7 +566,14 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
             }
         }
     }
-
+    private fun backPressedMainActivity(){
+        callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                (activity as SubActivity).gotoMainActiverty()
+            }
+        }
+        requireActivity().onBackPressedDispatcher.addCallback(requireActivity(), callback)
+    }
 
     fun checkRunTimePermission():Boolean{
         val hasFineLocationPermission:Int = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
@@ -554,6 +599,7 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
         if(!searchFlag || !resultFlag){
             mapViewContainer.removeAllViews()
         }
+        callback.remove()
         Log.d("resultFlag",resultFlag.toString())
         super.onStop()
 
@@ -816,51 +862,6 @@ class mapFragment : Fragment(),MapView.MapViewEventListener {
                             Log.e("GetSearch", "onFailure")
                         }
                     })
-                    /*
-                    val builder = Dialog(c)
-                    builder.setContentView(R.layout.search_local_dialog)
-                    builder.setTitle(p1.itemName.toString())
-                    builder.window?.attributes?.width = WindowManager.LayoutParams.MATCH_PARENT
-                    builder.findViewById<View>(R.id.searchdialog_add_button).visibility = View.GONE
-                    builder.findViewById<View>(R.id.searchdialog_ok_button).visibility = View.GONE
-                    val recycler = builder.findViewById<RecyclerView>(R.id.searchdialog_recyclerview)
-                    val list = mutableListOf<String>()
-                    val retrofit = Retrofit.Builder()
-                            .baseUrl(MyApplication.baseurl)
-                            .addConverterFactory(GsonConverterFactory.create())
-                            .build()
-                    val adapter = searchAdapter(list)
-                    recycler.adapter = adapter
-                    recycler.layoutManager = LinearLayoutManager(c)
-                    val api = retrofit.create(spark::class.java)
-                    val getWeekDetail = api.getWeekDetail(p1.itemName.split(" : ")[0])
-                    getWeekDetail.enqueue(object : Callback<List<Data>> {
-                        override fun onResponse(call: Call<List<Data>>, response: Response<List<Data>>) {
-                            if (response.isSuccessful()) {
-                                val resData = Gson().toJson(response.body())
-                                list.clear()
-                                val tempobject = JSONArray(resData)
-                                for (i in 0 until tempobject.length()) {
-                                    list.add(tempobject.getJSONObject(i).toString())
-                                }
-                                adapter.notifyDataSetChanged()
-
-                                Log.d("getWeekDetail", "Successful")
-                            } else {
-
-                                Log.d("getWeekDetail", "notSuccessful")
-                            }
-                        }
-
-                        override fun onFailure(call: Call<List<Data>>, t: Throwable) {
-
-                            Log.e("getWeekDetail", "onFailure")
-                        }
-                    })
-                    builder.show()
-                    //Toast.makeText(c,p1.itemName,Toast.LENGTH_SHORT).show()
-
-                     */
                 }
             }
         }
