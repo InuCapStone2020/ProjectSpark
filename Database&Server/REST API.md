@@ -93,6 +93,11 @@ DB에 재난문자를 추가(삽입)하는 기능입니다.
     Parameter
     |Name|Type|Description|Required|
     |:---|:---|:---|:---|
+    |data|message[]|추가하려는 재난문자 리스트(배열)|O|
+    
+    message
+    |Name|Type|Description|Required|
+    |:---|:---|:---|:---|
     |NUM|Integer|재난문자의 고유번호|O|
     |SUBNUM|Integer|같은 NUM의 재난문자 구분을 위한 번호|O|
     |M_DATE|String|재난문자 발송일자|O|
@@ -123,6 +128,11 @@ DB에 저장된 재난문자의 NUM, SUBNUM 값을 이용하여 재난문자의 
     ```
 
     Parameter
+    |Name|Type|Description|Required|
+    |:---|:---|:---|:---|
+    |data|setting[]|수정하려는 재난문자의 설정 리스트(배열)|O|
+    
+    setting
     |Name|Type|Description|Required|
     |:---|:---|:---|:---|
     |NUM|Integer|수정하고자 하는 재난문자의 고유번호|O|
