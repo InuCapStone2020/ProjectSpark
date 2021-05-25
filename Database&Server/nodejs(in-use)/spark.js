@@ -218,6 +218,7 @@ app.get("/weekcount", (req, res) => {
     });
 });
 
+/*
 app.get("/weekdetail", (req, res) => {
     var _url = req.url;
     var querydata = url.parse(_url, true).query;
@@ -253,6 +254,7 @@ app.get("/weekdetail", (req, res) => {
         }
     });
 });
+*/
 
 app.get("/notice", (req, res) => {
     var noticeSQL = "";
