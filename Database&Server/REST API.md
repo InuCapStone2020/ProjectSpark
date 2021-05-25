@@ -107,3 +107,32 @@ DB에 재난문자를 추가(삽입)하는 기능입니다.
     |Name|Type|Description|
     |:---|:---|:---|
     |message|String|성공 시 "Insert Successful"|
+    
+---
+## 재난문자 수정(갱신)하기
+
+DB에 저장된 재난문자의 NUM, SUBNUM 값을 이용하여 재난문자의 EVENT를 수정하는 기능입니다.
+
+`PATCH` 방식으로 요청합니다.
+
+- **Request**
+
+    URL
+    ```http
+    PATCH /renewal HTTP/1.1
+    ```
+
+    Parameter
+    |Name|Type|Description|Required|
+    |:---|:---|:---|:---|
+    |NUM|Integer|수정하고자 하는 재난문자의 고유번호|O|
+    |SUBNUM|Integer|수정하고자 하는 같은 NUM의 재난문자 구분을 위한 번호|O|
+    |EVENT|String|수정 후 재난문자의 사건분류|O|
+    
+- **Response**
+
+    Key
+    |Name|Type|Description|
+    |:---|:---|:---|
+    |message|String|성공 시 "Update Successful"|
+
