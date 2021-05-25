@@ -163,7 +163,7 @@ DB에 저장된 재난문자의 NUM, SUBNUM 값을 이용하여 재난문자를 
     Parameter
     |Name|Type|Description|Required|
     |:---|:---|:---|:---|
-    |data|delN[]|수정하려는 재난문자의 설정 리스트(배열)|O|
+    |data|delN[]|삭제하려는 재난문자의 설정 리스트(배열)|O|
     
     delN
     |Name|Type|Description|Required|
