@@ -49,6 +49,37 @@ DB에서 재난문자를 검색하는 기능입니다.
     |CONTENT|String|재난문자 내용|
     |EVENT|String|재난문자의 사건분류|
 
+---
+## 지역별 일주일 내 재난문자 개수 구하기
+
+각 행정지역별로 일주일 내 발송된 재난문자의 개수를 구하는 기능입니다.
+
+`GET` 방식으로 요청하고, 응답은 `JSON` 객체로 받습니다.
+
+- **Request**
+    
+    URL
+    ```http
+    GET /weekcount HTTP/1.1
+    ```
+    
+    Parameter
+
+    `No parameter`
+    
+- **Response**
+
+    Key
+    |Name|Type|Description|
+    |:---|:---|:---|
+    |result|regCnt[]|지역과 그 지역의 재난문자 수를 저장한 리스트(배열)|
+    
+    regCnt
+    |Name|Type|Description|
+    |:---|:---|:---|
+    |region|String|지역 구분|
+    |count|Integer|지역에 따른 일주일 내 재난문자의 수|
+    
 
 ---
 ## DB 내에 저장된 재난문자의 최초 날짜 구하기
