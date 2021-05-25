@@ -22,7 +22,7 @@ var connection = mysql.createConnection({
     port: 3306
 });
 
-app.post("/messageinsert", (req, res) => {
+app.post("/addition", (req, res) => {
     var number = req.body.data.length;
 
     var num = [];
@@ -313,20 +313,78 @@ app.get("/notice", (req, res) => {
     });
 });
 
-app.patch("/eventupdate", (req, res) => {
-    var event = req.body.event;
-    var num = req.body.num;
-    var subnum = req.body.subnum;
+app.patch("/renewal", (req, res) => {
+    var number = req.body.data.length;
+
+    var event = [];
+    var num = [];
+    var subNum = [];
+
+    var qs = [];
+
+    var i = 0;
+    while (i < number) {
+        num.push(req.body.data[i].NUM);
+        subNum.push(req.body.data[i].SUBNUM);
+        event.push(req.body.data[i].EVENT);
+        var temp = [event[i], num[i], subNum[i]];
+        qs.push(temp);
+        i++;
+    }
 
     var updateSQL = "UPDATE Message_List SET EVENT=? WHERE NUM=? AND SUBNUM=?";
-    var qs = [event, num, subnum];
 
-    ret = "Update Success";
-    connection.query(updateSQL, qs, (err, result) => {
-        if (err) {
-            console.log(err);
-        } else {
-            console.log(ret);
-        }
-    });
+    var j = 0;
+    var ret = "Error";
+    while (j < number) {
+        connection.query(updateSQL, qs[j], (err, result) => {
+            if (err) {
+                ret = "Error";
+                console.log(err);
+            } else {
+                ret = "Update Successful";
+            }
+            res.json({
+                message: ret
+            });
+        });
+        j++;
+    }
+});
+
+app.delete("/elimination", (req, res) => {
+    var number = req.body.data.length;
+
+    var num = [];
+    var subNum = [];
+
+    var qs = [];
+
+    var i = 0;
+    while (i < number) {
+        num.push(req.body.data[i].NUM);
+        subNum.push(req.body.data[i].SUBNUM);
+        var temp = [num[i], subNum[i]];
+        qs.push(temp);
+        i++;
+    }
+
+    var delSQL = "DELETE FROM Message_List WHERE NUM=? AND SUBNUM=?";
+
+    var j = 0;
+    var ret = "Error";
+    while (j < number) {
+        connection.query(delSQL, qs[j], (err, result) => {
+            if (err) {
+                ret = "Error";
+                console.log(err);
+            } else {
+                ret = "Eliminate Successful";
+            }
+            res.json({
+                message: ret
+            });
+        });
+        j++;
+    }
 });
