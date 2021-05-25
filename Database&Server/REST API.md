@@ -50,6 +50,45 @@ DB에서 재난문자를 검색하는 기능입니다.
     |EVENT|String|재난문자의 사건분류|
 
 ---
+## 지역별 재난문자 내역 구하기
+
+DB에서 지역별 재난문자를 구하는 기능입니다. 이 기능은 애플리케이션 상에서 재난문자 알림 및 보관함 기능과 연관되는 기능입니다.
+
+`GET` 방식으로 요청하고, 응답은 `JSON` 객체로 받습니다.
+
+- **Request**
+    
+    URL
+    ```http
+    GET /search HTTP/1.1
+    ```
+    
+    Parameter
+    |Name|Type|Description|Required|
+    |:---|:---|:---|:---|
+    |region|String|조건(지역)|O|
+    |interval|Integer|조건(시간) - 현재 시간에서 얼마전 시간까지 구할 것인가(분단위)|O|
+    
+- **Response**
+
+    Key
+    |Name|Type|Description|
+    |:---|:---|:---|
+    |result|message[]|검색된 재난문자들의 배열|
+    
+    message
+    |Name|Type|Description|
+    |:---|:---|:---|
+    |NUM|Integer|재난문자의 고유번호|
+    |SUBNUM|Integer|같은 NUM의 재난문자 구분을 위한 번호|
+    |M_DATE|String|재난문자 발송일자|
+    |M_TIME|String|재난문자 발송시간|
+    |REGION|String|재난문자 발송지역|
+    |CONTENT|String|재난문자 내용|
+    |EVENT|String|재난문자의 사건분류|
+
+
+---
 ## 지역별 일주일 내 재난문자 개수 구하기
 
 각 행정지역별로 일주일 내 발송된 재난문자의 개수를 구하는 기능입니다.
