@@ -9,11 +9,11 @@
 https://github.com/schan9788
 ### 고찬혁 `BackEnd` `DataProcess`
 https://github.com/podoCU
-### 허준혁 `BackEnd` `Server` `DB`
+### 허준혁 `BackEnd` `Server(Node.js)` `DB(MySQL)`
 https://github.com/ComelyU
 *****
 ## # 사용한 프로그램
-`Android Studio` `Python 3.8` `Visual Studio Code` `MySQL` `SQLite`
+`Android Studio` `Python 3.8` `Visual Studio Code`
 ## # 사용한 외부 서비스
 `Kakao Maps API` `Kakao Local API` `Vworld API` `AWS` `Retrofit` `okHttp3` 
 *****
